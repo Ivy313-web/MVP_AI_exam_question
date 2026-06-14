@@ -305,10 +305,29 @@ select {
 }
 
 .result-card {
-  display: grid;
-  gap: 18px;
-  justify-items: center;
+  display: flex;
+  width: min(100%, 600px);
+  min-height: 300px;
+  margin: 0 auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  grid-column: 1 / -1;
+  justify-self: center;
+  gap: 26px;
+  padding: clamp(40px, 5vw, 64px);
   text-align: center;
+}
+
+.app-grid:has(> .result-card) {
+  min-height: calc(100vh - var(--space-page) - var(--space-page));
+  align-items: center;
+}
+
+.result-card .primary-button {
+  width: auto;
+  margin-top: 6px;
+  align-self: center;
 }
 
 .result-title,

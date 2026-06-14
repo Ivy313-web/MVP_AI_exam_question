@@ -17,7 +17,8 @@ const appState = {
   answers: [],
   score: 0,
   topicTree: {},
-  answerMode: "short"
+  answerMode: "short",
+  resultSnapshot: []
 };
 
 // TOPIC DATA
@@ -39,11 +40,7 @@ const rawTopicTree = {
 const rawQuestions = [
   {
     id: "q1",
-    topic: {
-      level1: "Topic",
-      level2: "Physics",
-      level3: "Projectile Motion"
-    },
+    topic: { level1: "Topic", level2: "Physics", level3: "Projectile Motion" },
     prompt: "Which component of velocity remains constant in ideal projectile motion when air resistance is ignored?",
     quizOptions: ["Horizontal velocity", "Vertical velocity", "Resultant velocity", "Terminal velocity"],
     quizCorrectAnswer: "Horizontal velocity",
@@ -52,11 +49,7 @@ const rawQuestions = [
   },
   {
     id: "q2",
-    topic: {
-      level1: "Topic",
-      level2: "Physics",
-      level3: "Projectile Motion"
-    },
+    topic: { level1: "Topic", level2: "Physics", level3: "Projectile Motion" },
     prompt: "What is the vertical acceleration of a projectile near Earth's surface, ignoring air resistance?",
     quizOptions: ["0 m/s^2", "9.8 m/s^2 downward", "9.8 m/s upward", "It changes with speed"],
     quizCorrectAnswer: "9.8 m/s^2 downward",
@@ -65,11 +58,7 @@ const rawQuestions = [
   },
   {
     id: "q3",
-    topic: {
-      level1: "Topic",
-      level2: "Physics",
-      level3: "Projectile Motion"
-    },
+    topic: { level1: "Topic", level2: "Physics", level3: "Projectile Motion" },
     prompt: "At the highest point of a projectile's path, what is its vertical velocity?",
     quizOptions: ["Zero", "Maximum", "Equal to horizontal velocity", "Equal to acceleration"],
     quizCorrectAnswer: "Zero",
@@ -78,11 +67,7 @@ const rawQuestions = [
   },
   {
     id: "q4",
-    topic: {
-      level1: "Topic",
-      level2: "Physics",
-      level3: "Projectile Motion"
-    },
+    topic: { level1: "Topic", level2: "Physics", level3: "Projectile Motion" },
     prompt: "What shape is the path of an ideal projectile?",
     quizOptions: ["Parabola", "Circle", "Ellipse", "Straight line"],
     quizCorrectAnswer: "Parabola",
@@ -91,11 +76,7 @@ const rawQuestions = [
   },
   {
     id: "q5",
-    topic: {
-      level1: "Topic",
-      level2: "Physics",
-      level3: "Projectile Motion"
-    },
+    topic: { level1: "Topic", level2: "Physics", level3: "Projectile Motion" },
     prompt: "Which force acts on an ideal projectile after launch when air resistance is ignored?",
     quizOptions: ["Weight", "Thrust", "Drag", "Normal reaction"],
     quizCorrectAnswer: "Weight",
@@ -104,11 +85,7 @@ const rawQuestions = [
   },
   {
     id: "q6",
-    topic: {
-      level1: "Topic",
-      level2: "Physics",
-      level3: "Projectile Motion"
-    },
+    topic: { level1: "Topic", level2: "Physics", level3: "Projectile Motion" },
     prompt: "For launch and landing at the same height, which launch angle gives maximum range?",
     quizOptions: ["45 degrees", "30 degrees", "60 degrees", "90 degrees"],
     quizCorrectAnswer: "45 degrees",
@@ -117,11 +94,7 @@ const rawQuestions = [
   },
   {
     id: "q7",
-    topic: {
-      level1: "Topic",
-      level2: "Physics",
-      level3: "Projectile Motion"
-    },
+    topic: { level1: "Topic", level2: "Physics", level3: "Projectile Motion" },
     prompt: "If initial speed is fixed, what happens to time of flight when the vertical launch component increases?",
     quizOptions: ["It increases", "It decreases", "It becomes zero", "It is unaffected"],
     quizCorrectAnswer: "It increases",
@@ -130,11 +103,7 @@ const rawQuestions = [
   },
   {
     id: "q8",
-    topic: {
-      level1: "Topic",
-      level2: "Physics",
-      level3: "Projectile Motion"
-    },
+    topic: { level1: "Topic", level2: "Physics", level3: "Projectile Motion" },
     prompt: "Which initial velocity component determines the range when time of flight is known?",
     quizOptions: ["Horizontal component", "Vertical component", "Acceleration component", "Resultant component"],
     quizCorrectAnswer: "Horizontal component",
@@ -143,11 +112,7 @@ const rawQuestions = [
   },
   {
     id: "q9",
-    topic: {
-      level1: "Topic",
-      level2: "Physics",
-      level3: "Projectile Motion"
-    },
+    topic: { level1: "Topic", level2: "Physics", level3: "Projectile Motion" },
     prompt: "What assumption allows horizontal acceleration to be zero in projectile motion?",
     quizOptions: ["No air resistance", "Constant mass", "Small launch angle", "High launch speed"],
     quizCorrectAnswer: "No air resistance",
@@ -156,11 +121,7 @@ const rawQuestions = [
   },
   {
     id: "q10",
-    topic: {
-      level1: "Topic",
-      level2: "Physics",
-      level3: "Projectile Motion"
-    },
+    topic: { level1: "Topic", level2: "Physics", level3: "Projectile Motion" },
     prompt: "What is the horizontal displacement of a projectile commonly called?",
     quizOptions: ["Range", "Height", "Amplitude", "Period"],
     quizCorrectAnswer: "Range",
@@ -454,13 +415,11 @@ function submitCurrentAnswer() {
     answerMode: appState.answerMode,
     isCorrect: isCorrect
   };
-
   if (isCorrect) {
     appState.score += question.marks;
   }
 
   moveToNextQuestion();
-
   renderApp();
 }
 
@@ -473,13 +432,13 @@ function skipCurrentQuestion() {
     answerMode: appState.answerMode,
     isCorrect: false
   };
-
   moveToNextQuestion();
   renderApp();
 }
 
 function moveToNextQuestion() {
   if (appState.currentQuestionIndex + 1 >= appState.questions.length) {
+    createResultSnapshot();
     appState.currentState = STATES.RESULT;
   } else {
     appState.currentQuestionIndex += 1;
@@ -501,6 +460,30 @@ function evaluateAnswer(question, answer, answerMode) {
 
 function normalizeAnswer(value) {
   return String(value).trim().toLowerCase().replace(/\s+/g, " ");
+}
+
+function createResultSnapshot() {
+  appState.resultSnapshot = Object.freeze(appState.questions.map((question, index) => {
+    const savedAnswer = appState.answers[index];
+    const questionType = savedAnswer ? savedAnswer.answerMode : appState.answerMode;
+    const isSkipped = !savedAnswer || normalizeAnswer(savedAnswer.answer) === "";
+    const isCorrect = !isSkipped && evaluateAnswer(question, savedAnswer.answer, questionType);
+
+    return Object.freeze({
+      questionId: question.id,
+      questionNumber: index + 1,
+      questionText: question.prompt,
+      questionType: questionType,
+      userAnswer: isSkipped ? "Skipped" : savedAnswer.answer,
+      correctAnswer: questionType === "quiz" ? question.quizCorrectAnswer : question.shortAcceptedAnswers[0],
+      status: isSkipped ? "skipped" : isCorrect ? "correct" : "incorrect",
+      aiExplanation: ""
+    });
+  }));
+}
+
+function getFrozenResultSnapshot() {
+  return appState.resultSnapshot;
 }
 
 // API PLACEHOLDERS
