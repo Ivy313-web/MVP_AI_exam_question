@@ -56,9 +56,58 @@ const sampleResults = Object.freeze([
 ]);
 
 // DATA SOURCE LAYER
+// DATA SOURCE LAYER
 function loadResultsFromV1Source() {
-  // Future integration point for reading or importing MAXI V1 frozen result objects.
+  const savedSnapshot = localStorage.getItem("maxiResultSnapshot");
+
+  if (savedSnapshot) {
+    try {
+      const parsedSnapshot = JSON.parse(savedSnapshot);
+
+      if (Array.isArray(parsedSnapshot)) {
+        return parsedSnapshot.map(convertV1SnapshotToExplainResult);
+      }
+    } catch (error) {
+      console.error("Failed to parse saved MAXI result snapshot:", error);
+    }
+  }
+
   return sampleResults;
+}
+
+function convertV1SnapshotToExplainResult(snapshotItem) {
+  const status = formatStatusForExplainPage(snapshotItem.status);
+
+  return Object.freeze({
+    id: snapshotItem.questionId,
+    questionNumber: snapshotItem.questionNumber,
+    questionText: snapshotItem.questionText,
+    questionType: snapshotItem.questionType,
+    generatedParams: Object.freeze({}),
+    userAnswer: snapshotItem.userAnswer,
+    correctAnswer: snapshotItem.correctAnswer,
+    isCorrect: snapshotItem.status === "correct",
+    status: status,
+    topic: "Projectile Motion",
+    subject: "Physics",
+    aiExplanation: snapshotItem.aiExplanation || ""
+  });
+}
+
+function formatStatusForExplainPage(status) {
+  if (status === "correct") {
+    return "Correct";
+  }
+
+  if (status === "incorrect") {
+    return "Incorrect";
+  }
+
+  if (status === "skipped") {
+    return "Skipped";
+  }
+
+  return "Skipped";
 }
 
 // AI PLACEHOLDER LAYER
