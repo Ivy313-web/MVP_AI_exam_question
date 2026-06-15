@@ -1,7 +1,12 @@
+// STORAGE / NAVIGATION CONFIG
+const RESULT_STORAGE_KEY = "maxiResultSnapshot";
+const QUESTION_PAGE_URL = "../MAXI_question/main.html";
+
 // STATE
 const STATES = {
   EXPLAIN: "EXPLAIN",
-  FINAL: "FINAL"
+  FINAL: "FINAL",
+  EMPTY: "EMPTY"
 };
 
 const appState = {
@@ -58,7 +63,7 @@ const sampleResults = Object.freeze([
 // DATA SOURCE LAYER
 // DATA SOURCE LAYER
 function loadResultsFromV1Source() {
-  const savedSnapshot = localStorage.getItem("maxiResultSnapshot");
+  const savedSnapshot = localStorage.getItem(RESULT_STORAGE_KEY);
 
   if (savedSnapshot) {
     try {
@@ -72,7 +77,7 @@ function loadResultsFromV1Source() {
     }
   }
 
-  return sampleResults;
+  return [];
 }
 
 function convertV1SnapshotToExplainResult(snapshotItem) {
@@ -112,9 +117,20 @@ function formatStatusForExplainPage(status) {
 
 // AI PLACEHOLDER LAYER
 function requestAIExplanation(questionResult) {
-  return "AI explanation will appear here in a future version.";
-}
+  if (questionResult.status === "Correct") {
+    return "Your answer is correct. You understood the key idea for this question.";
+  }
 
+  if (questionResult.status === "Incorrect") {
+    return "Your answer does not match the expected answer. Compare your response with the correct answer and review the key idea tested in this question.";
+  }
+
+  if (questionResult.status === "Skipped") {
+    return "You skipped this question. Try it again and focus on the correct answer shown above.";
+  }
+
+  return "Review your answer and compare it with the correct answer shown above.";
+}
 function requestAllAIExplanations(results) {
   return results.map(result => Object.freeze({
     ...result,
@@ -209,6 +225,14 @@ function escapeHTML(value) {
 // EVENTS
 document.getElementById("root").addEventListener("click", handleRootClick);
 
+function clearSavedResultSnapshot() {
+  localStorage.removeItem(RESULT_STORAGE_KEY);
+}
+
+function goToQuestionPage() {
+  window.location.href = QUESTION_PAGE_URL;
+}
+
 function handleRootClick(event) {
   const actionElement = event.target.closest("[data-action]");
 
@@ -230,13 +254,27 @@ function handleRootClick(event) {
   }
 }
 
-function handleTryAgain() {}
+function handleTryAgain() {
+  clearSavedResultSnapshot();
+  goToQuestionPage();
+}
 
-function handleFinish() {}
-
+function handleFinish() {
+  clearSavedResultSnapshot();
+  goToQuestionPage();
+}
 // INIT
 function initializeApp() {
   const sourceResults = loadResultsFromV1Source();
+
+  if (sourceResults.length === 0) {
+    appState.currentState = STATES.EMPTY;
+    appState.results = [];
+    renderApp();
+    return;
+  }
+
+  appState.currentState = STATES.EXPLAIN;
   appState.results = requestAllAIExplanations(sourceResults);
   renderApp();
 }

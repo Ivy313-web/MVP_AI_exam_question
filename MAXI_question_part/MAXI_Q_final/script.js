@@ -1,7 +1,11 @@
+
+// STORAGE CONFIG
+const RESULT_STORAGE_KEY = "maxiResultSnapshot";
 // CONFIG
 const CONFIG = {
   topicPanelCollapsed: false,
-  topicBranchExpanded: true
+  topicBranchExpanded: true,
+  useAIGrading: false
 };
 
 const STATES = {
@@ -348,6 +352,7 @@ function handleRootClick(event) {
 
   const action = actionElement.dataset.action;
 
+
   if (action === "toggle-topic") {
     CONFIG.topicPanelCollapsed = !CONFIG.topicPanelCollapsed;
     renderApp();
@@ -445,17 +450,50 @@ function moveToNextQuestion() {
   }
 }
 
-function handleCheckResult() {}
+function handleCheckResult() {
+  handleOpenExplainPage();
+}
+
+function handleOpenExplainPage() {
+  const snapshot = getFrozenResultSnapshot();
+
+  localStorage.setItem(RESULT_STORAGE_KEY, JSON.stringify(snapshot));
+  window.location.href = "../MAXI_explain/explain.html"
+
+}
 
 // EVALUATION
 function evaluateAnswer(question, answer, answerMode) {
   if (answerMode === "quiz") {
-    return normalizeAnswer(answer) === normalizeAnswer(question.quizCorrectAnswer);
+    return gradeQuizAnswer(question, answer);
   }
 
+  return gradeShortAnswer(question, answer);
+}
+
+function gradeQuizAnswer(question, answer) {
+  return normalizeAnswer(answer) === normalizeAnswer(question.quizCorrectAnswer);
+}
+
+function gradeShortAnswer(question, answer) {
+  if (CONFIG.useAIGrading) {
+    return gradeShortAnswerWithAPI(question, answer);
+  }
+
+  return gradeShortAnswerLocally(question, answer);
+}
+
+function gradeShortAnswerLocally(question, answer) {
   return question.shortAcceptedAnswers.some((acceptedAnswer) => {
     return normalizeAnswer(answer) === normalizeAnswer(acceptedAnswer);
   });
+}
+
+function gradeShortAnswerWithAPI(question, answer) {
+  // Future API grading placeholder.
+  // This public MVP keeps API grading disabled by default.
+  // For now, it safely falls back to local grading.
+  return gradeShortAnswerLocally(question, answer);
 }
 
 function normalizeAnswer(value) {
