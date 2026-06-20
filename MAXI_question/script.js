@@ -1,11 +1,12 @@
-
 // STORAGE CONFIG
 const RESULT_STORAGE_KEY = "maxiResultSnapshot";
+
 // CONFIG
 const CONFIG = {
   topicPanelCollapsed: false,
   topicBranchExpanded: true,
-  useAIGrading: false
+  useAIGrading: false,
+  modeSelectionPath: "../MAXI_mode/mode.html"
 };
 
 const STATES = {
@@ -21,8 +22,9 @@ const appState = {
   answers: [],
   score: 0,
   topicTree: {},
-  answerMode: "short",
-  resultSnapshot: []
+  selectedMode: getModeFromURL(),
+  resultSnapshot: [],
+  quitModalOpen: false
 };
 
 // TOPIC DATA
@@ -44,7 +46,11 @@ const rawTopicTree = {
 const rawQuestions = [
   {
     id: "q1",
-    topic: { level1: "Topic", level2: "Physics", level3: "Projectile Motion" },
+    topic: {
+      level1: "Topic",
+      level2: "Physics",
+      level3: "Projectile Motion"
+    },
     prompt: "Which component of velocity remains constant in ideal projectile motion when air resistance is ignored?",
     quizOptions: ["Horizontal velocity", "Vertical velocity", "Resultant velocity", "Terminal velocity"],
     quizCorrectAnswer: "Horizontal velocity",
@@ -53,7 +59,11 @@ const rawQuestions = [
   },
   {
     id: "q2",
-    topic: { level1: "Topic", level2: "Physics", level3: "Projectile Motion" },
+    topic: {
+      level1: "Topic",
+      level2: "Physics",
+      level3: "Projectile Motion"
+    },
     prompt: "What is the vertical acceleration of a projectile near Earth's surface, ignoring air resistance?",
     quizOptions: ["0 m/s^2", "9.8 m/s^2 downward", "9.8 m/s upward", "It changes with speed"],
     quizCorrectAnswer: "9.8 m/s^2 downward",
@@ -62,7 +72,11 @@ const rawQuestions = [
   },
   {
     id: "q3",
-    topic: { level1: "Topic", level2: "Physics", level3: "Projectile Motion" },
+    topic: {
+      level1: "Topic",
+      level2: "Physics",
+      level3: "Projectile Motion"
+    },
     prompt: "At the highest point of a projectile's path, what is its vertical velocity?",
     quizOptions: ["Zero", "Maximum", "Equal to horizontal velocity", "Equal to acceleration"],
     quizCorrectAnswer: "Zero",
@@ -71,7 +85,11 @@ const rawQuestions = [
   },
   {
     id: "q4",
-    topic: { level1: "Topic", level2: "Physics", level3: "Projectile Motion" },
+    topic: {
+      level1: "Topic",
+      level2: "Physics",
+      level3: "Projectile Motion"
+    },
     prompt: "What shape is the path of an ideal projectile?",
     quizOptions: ["Parabola", "Circle", "Ellipse", "Straight line"],
     quizCorrectAnswer: "Parabola",
@@ -80,7 +98,11 @@ const rawQuestions = [
   },
   {
     id: "q5",
-    topic: { level1: "Topic", level2: "Physics", level3: "Projectile Motion" },
+    topic: {
+      level1: "Topic",
+      level2: "Physics",
+      level3: "Projectile Motion"
+    },
     prompt: "Which force acts on an ideal projectile after launch when air resistance is ignored?",
     quizOptions: ["Weight", "Thrust", "Drag", "Normal reaction"],
     quizCorrectAnswer: "Weight",
@@ -89,7 +111,11 @@ const rawQuestions = [
   },
   {
     id: "q6",
-    topic: { level1: "Topic", level2: "Physics", level3: "Projectile Motion" },
+    topic: {
+      level1: "Topic",
+      level2: "Physics",
+      level3: "Projectile Motion"
+    },
     prompt: "For launch and landing at the same height, which launch angle gives maximum range?",
     quizOptions: ["45 degrees", "30 degrees", "60 degrees", "90 degrees"],
     quizCorrectAnswer: "45 degrees",
@@ -98,7 +124,11 @@ const rawQuestions = [
   },
   {
     id: "q7",
-    topic: { level1: "Topic", level2: "Physics", level3: "Projectile Motion" },
+    topic: {
+      level1: "Topic",
+      level2: "Physics",
+      level3: "Projectile Motion"
+    },
     prompt: "If initial speed is fixed, what happens to time of flight when the vertical launch component increases?",
     quizOptions: ["It increases", "It decreases", "It becomes zero", "It is unaffected"],
     quizCorrectAnswer: "It increases",
@@ -107,7 +137,11 @@ const rawQuestions = [
   },
   {
     id: "q8",
-    topic: { level1: "Topic", level2: "Physics", level3: "Projectile Motion" },
+    topic: {
+      level1: "Topic",
+      level2: "Physics",
+      level3: "Projectile Motion"
+    },
     prompt: "Which initial velocity component determines the range when time of flight is known?",
     quizOptions: ["Horizontal component", "Vertical component", "Acceleration component", "Resultant component"],
     quizCorrectAnswer: "Horizontal component",
@@ -116,7 +150,11 @@ const rawQuestions = [
   },
   {
     id: "q9",
-    topic: { level1: "Topic", level2: "Physics", level3: "Projectile Motion" },
+    topic: {
+      level1: "Topic",
+      level2: "Physics",
+      level3: "Projectile Motion"
+    },
     prompt: "What assumption allows horizontal acceleration to be zero in projectile motion?",
     quizOptions: ["No air resistance", "Constant mass", "Small launch angle", "High launch speed"],
     quizCorrectAnswer: "No air resistance",
@@ -125,7 +163,11 @@ const rawQuestions = [
   },
   {
     id: "q10",
-    topic: { level1: "Topic", level2: "Physics", level3: "Projectile Motion" },
+    topic: {
+      level1: "Topic",
+      level2: "Physics",
+      level3: "Projectile Motion"
+    },
     prompt: "What is the horizontal displacement of a projectile commonly called?",
     quizOptions: ["Range", "Height", "Amplitude", "Period"],
     quizCorrectAnswer: "Range",
@@ -173,12 +215,37 @@ function renderApp() {
 
   root.innerHTML = `
     <main class="app-shell">
+      ${renderQuitButton()}
       <div class="app-grid">
         ${renderTopicPanel()}
         ${renderProgress()}
         ${renderCurrentState()}
       </div>
+      ${appState.quitModalOpen ? renderQuitModal() : ""}
     </main>
+  `;
+}
+
+function renderQuitButton() {
+  return `
+    <button class="quit-button" type="button" data-action="quit-session">
+      Quit
+    </button>
+  `;
+}
+
+function renderQuitModal() {
+  return `
+    <div class="quit-modal-overlay" data-action="quit-modal-overlay">
+      <section class="quit-modal-card" role="dialog" aria-modal="true" aria-labelledby="quitModalTitle">
+        <h2 id="quitModalTitle" class="quit-modal-title">Quit practice?</h2>
+        <p class="quit-modal-message">Are you sure you want to quit this practice session? Your current progress may not be saved.</p>
+        <div class="quit-modal-actions">
+          <button class="secondary-button" type="button" data-action="close-quit-modal">Cancel</button>
+          <button class="quit-confirm-button" type="button" data-action="confirm-quit">Confirm quit</button>
+        </div>
+      </section>
+    </div>
   `;
 }
 
@@ -240,13 +307,7 @@ function renderQuestion() {
       <h1 class="prompt">${escapeHTML(question.prompt)}</h1>
       <div class="response-area">
         <div class="response-header">
-          <label class="mode-selector">
-            <span>Mode</span>
-            <select data-action="change-mode" aria-label="Answer mode">
-              <option value="quiz"${appState.answerMode === "quiz" ? " selected" : ""}>Quiz</option>
-              <option value="short"${appState.answerMode === "short" ? " selected" : ""}>Short answer</option>
-            </select>
-          </label>
+          <span class="mode-indicator">${getModeIndicatorText()}</span>
         </div>
         ${renderResponseInput(question)}
       </div>
@@ -263,7 +324,7 @@ function renderQuestion() {
 function renderResponseInput(question) {
   const savedAnswer = getCurrentAnswerValue();
 
-  if (appState.answerMode === "quiz") {
+  if (appState.selectedMode === "quiz") {
     return `
       <div class="quiz-options" role="radiogroup" aria-label="Quiz options">
         ${question.quizOptions.map((option, index) => `
@@ -279,6 +340,10 @@ function renderResponseInput(question) {
   return `
     <textarea class="short-answer" data-action="short-answer" aria-label="Short answer" placeholder="Type your answer here">${escapeHTML(savedAnswer)}</textarea>
   `;
+}
+
+function getModeIndicatorText() {
+  return appState.selectedMode === "quiz" ? "Current mode: Quiz" : "Current mode: Short answer";
 }
 
 function renderResult() {
@@ -341,9 +406,14 @@ function escapeAttribute(value) {
 // EVENTS
 document.getElementById("root").addEventListener("click", handleRootClick);
 document.getElementById("root").addEventListener("input", handleRootInput);
-document.getElementById("root").addEventListener("change", handleRootChange);
+document.addEventListener("keydown", handleDocumentKeydown);
 
 function handleRootClick(event) {
+  if (event.target.dataset.action === "quit-modal-overlay") {
+    closeQuitModal();
+    return;
+  }
+
   const actionElement = event.target.closest("[data-action]");
 
   if (!actionElement) {
@@ -351,7 +421,6 @@ function handleRootClick(event) {
   }
 
   const action = actionElement.dataset.action;
-
 
   if (action === "toggle-topic") {
     CONFIG.topicPanelCollapsed = !CONFIG.topicPanelCollapsed;
@@ -379,6 +448,18 @@ function handleRootClick(event) {
   if (action === "check-result") {
     handleCheckResult();
   }
+
+  if (action === "quit-session") {
+    handleQuit();
+  }
+
+  if (action === "close-quit-modal") {
+    closeQuitModal();
+  }
+
+  if (action === "confirm-quit") {
+    handleConfirmQuit();
+  }
 }
 
 function handleRootInput(event) {
@@ -388,11 +469,9 @@ function handleRootInput(event) {
   }
 }
 
-function handleRootChange(event) {
-  if (event.target.dataset.action === "change-mode") {
-    appState.answerMode = event.target.value;
-    setCurrentAnswer("");
-    renderApp();
+function handleDocumentKeydown(event) {
+  if (event.key === "Escape" && appState.quitModalOpen) {
+    closeQuitModal();
   }
 }
 
@@ -400,7 +479,7 @@ function setCurrentAnswer(answer) {
   appState.answers[appState.currentQuestionIndex] = {
     questionId: appState.questions[appState.currentQuestionIndex].id,
     answer: answer,
-    answerMode: appState.answerMode,
+    answerMode: appState.selectedMode,
     isCorrect: false
   };
 }
@@ -412,12 +491,12 @@ function submitCurrentAnswer() {
 
   const question = appState.questions[appState.currentQuestionIndex];
   const answer = getCurrentAnswerValue();
-  const isCorrect = evaluateAnswer(question, answer, appState.answerMode);
+  const isCorrect = evaluateAnswer(question, answer, appState.selectedMode);
 
   appState.answers[appState.currentQuestionIndex] = {
     questionId: question.id,
     answer: answer,
-    answerMode: appState.answerMode,
+    answerMode: appState.selectedMode,
     isCorrect: isCorrect
   };
   if (isCorrect) {
@@ -425,6 +504,7 @@ function submitCurrentAnswer() {
   }
 
   moveToNextQuestion();
+
   renderApp();
 }
 
@@ -434,7 +514,7 @@ function skipCurrentQuestion() {
   appState.answers[appState.currentQuestionIndex] = {
     questionId: question.id,
     answer: "",
-    answerMode: appState.answerMode,
+    answerMode: appState.selectedMode,
     isCorrect: false
   };
   moveToNextQuestion();
@@ -458,8 +538,30 @@ function handleOpenExplainPage() {
   const snapshot = getFrozenResultSnapshot();
 
   localStorage.setItem(RESULT_STORAGE_KEY, JSON.stringify(snapshot));
-  window.location.href = "../MAXI_explain/explain.html"
+  window.location.href = "../MAXI_explain/explain.html";
+}
 
+function handleQuit() {
+  openQuitModal();
+}
+
+function openQuitModal() {
+  appState.quitModalOpen = true;
+  renderApp();
+}
+
+function closeQuitModal() {
+  appState.quitModalOpen = false;
+  renderApp();
+}
+
+function handleConfirmQuit() {
+  const shouldQuit = true;
+
+  if (shouldQuit) {
+    // TODO: connect this to the mode selection page later
+    window.location.href = CONFIG.modeSelectionPath;
+  }
 }
 
 // EVALUATION
@@ -500,10 +602,21 @@ function normalizeAnswer(value) {
   return String(value).trim().toLowerCase().replace(/\s+/g, " ");
 }
 
+function getModeFromURL() {
+  const params = new URLSearchParams(window.location.search);
+  const mode = params.get("mode");
+
+  if (mode === "quiz" || mode === "short") {
+    return mode;
+  }
+
+  return "short";
+}
+
 function createResultSnapshot() {
   appState.resultSnapshot = Object.freeze(appState.questions.map((question, index) => {
     const savedAnswer = appState.answers[index];
-    const questionType = savedAnswer ? savedAnswer.answerMode : appState.answerMode;
+    const questionType = appState.selectedMode;
     const isSkipped = !savedAnswer || normalizeAnswer(savedAnswer.answer) === "";
     const isCorrect = !isSkipped && evaluateAnswer(question, savedAnswer.answer, questionType);
 
