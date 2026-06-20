@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MAXI Mode Selection</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="mode-page">
+    <section class="mode-shell" aria-labelledby="modeTitle">
+      <p class="mode-instruction" id="modeTitle">Choose your practice mode</p>
+
+      <div class="mode-panel" role="group" aria-labelledby="modeTitle">
+        <button class="mode-choice" type="button" data-mode="quiz">
+          <span class="mode-icon" aria-hidden="true">
+            <svg class="quiz-icon" viewBox="0 0 120 120" focusable="false">
+              <rect class="icon-card" x="28" y="18" width="64" height="84" rx="14"></rect>
+              <path class="icon-top" d="M44 18h32a8 8 0 0 1 8 8v5H36v-5a8 8 0 0 1 8-8Z"></path>
+              <circle class="option-circle" cx="45" cy="48" r="6"></circle>
+              <path class="option-line" d="M58 48h20"></path>
+              <circle class="option-circle" cx="45" cy="65" r="6"></circle>
+              <path class="option-line" d="M58 65h20"></path>
+              <circle class="option-circle selected" cx="45" cy="82" r="6"></circle>
+              <path class="check-mark" d="M41 81.5l3.2 3.3L50 77.8"></path>
+              <path class="option-line" d="M58 82h20"></path>
+            </svg>
+          </span>
+          <span class="mode-copy">
+            <span class="mode-title">Quiz mode</span>
+            <span class="mode-description">Choose from options and practise quick recall.</span>
+          </span>
+        </button>
+
+        <div class="mode-divider" aria-hidden="true"></div>
+
+        <button class="mode-choice" type="button" data-mode="short">
+          <span class="mode-icon" aria-hidden="true">
+            <svg class="short-icon" viewBox="0 0 120 120" focusable="false">
+              <path class="bubble-shape" d="M29 31h62c8.3 0 15 6.7 15 15v27c0 8.3-6.7 15-15 15H57L37 102V88h-8c-8.3 0-15-6.7-15-15V46c0-8.3 6.7-15 15-15Z"></path>
+              <path class="typing-line" d="M36 54h30"></path>
+              <circle class="typing-dot" cx="38" cy="70" r="4"></circle>
+              <circle class="typing-dot" cx="52" cy="70" r="4"></circle>
+              <circle class="typing-dot" cx="66" cy="70" r="4"></circle>
+              <path class="cursor-line" d="M80 52v25"></path>
+            </svg>
+          </span>
+          <span class="mode-copy">
+            <span class="mode-title">Short answer mode</span>
+            <span class="mode-description">Type your own answer for stronger active recall.</span>
+          </span>
+        </button>
+      </div>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>
