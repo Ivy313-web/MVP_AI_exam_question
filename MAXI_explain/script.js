@@ -1,6 +1,6 @@
 // STORAGE / NAVIGATION CONFIG
 const RESULT_STORAGE_KEY = "maxiResultSnapshot";
-const QUESTION_PAGE_URL = "../MAXI_question/main.html";
+const QUESTION_PAGE_URL = "../MAXI_mode/mode.html";
 
 // STATE
 const STATES = {
@@ -82,12 +82,12 @@ function loadResultsFromV1Source() {
 
 function convertV1SnapshotToExplainResult(snapshotItem) {
   const status = formatStatusForExplainPage(snapshotItem.status);
-
-  return Object.freeze({
+  const questionType = snapshotItem.questionType;
+  const result = {
     id: snapshotItem.questionId,
     questionNumber: snapshotItem.questionNumber,
     questionText: snapshotItem.questionText,
-    questionType: snapshotItem.questionType,
+    questionType: questionType,
     generatedParams: Object.freeze({}),
     userAnswer: snapshotItem.userAnswer,
     correctAnswer: snapshotItem.correctAnswer,
@@ -96,7 +96,26 @@ function convertV1SnapshotToExplainResult(snapshotItem) {
     topic: "Projectile Motion",
     subject: "Physics",
     aiExplanation: snapshotItem.aiExplanation || ""
-  });
+  };
+
+  if (questionType === "short") {
+    result.marksAwarded = getSafeMarksAwarded(snapshotItem);
+    result.marksAvailable = getSafeMarksAvailable(snapshotItem);
+  }
+
+  return Object.freeze(result);
+}
+
+function getSafeMarksAwarded(snapshotItem) {
+  return typeof snapshotItem.marksAwarded === "number" && Number.isFinite(snapshotItem.marksAwarded)
+    ? snapshotItem.marksAwarded
+    : "";
+}
+
+function getSafeMarksAvailable(snapshotItem) {
+  return typeof snapshotItem.marksAvailable === "number" && Number.isFinite(snapshotItem.marksAvailable)
+    ? snapshotItem.marksAvailable
+    : "";
 }
 
 function formatStatusForExplainPage(status) {
@@ -174,7 +193,10 @@ function renderReviewCard(result) {
   return `
     <article class="review-card review-card--${statusClass}">
       <div class="review-card-header">
-        <p class="question-number">Question ${result.questionNumber}</p>
+        <div class="question-heading">
+          <p class="question-number">Question ${result.questionNumber}</p>
+          ${renderQuestionScore(result)}
+        </div>
         <span class="status-label status-label--${statusClass}">${escapeHTML(result.status)}</span>
       </div>
       <h2 class="question-text">${escapeHTML(result.questionText)}</h2>
@@ -198,29 +220,27 @@ function renderReviewCard(result) {
   `;
 }
 
-//google form
-function renderFinalActionPage() {
-  return `
-    <section class="final-card">
-      <div>
-        <h1 class="final-title">Review completed</h1>
-        <p class="final-copy">
-          You have finished reviewing your answers. Click "Finish" to give feedback on this MVP.
-        </p>
-      </div>
-      <div class="final-actions">
-        <button class="secondary-button final-action-button try-again-button" type="button" data-action="try-again">Try again</button>
-        <button class="primary-button final-action-button" type="button" data-action="finish">Finish</button>
-      </div>
-    </section>
-  `;
+function renderQuestionScore(result) {
+  if (result.questionType !== "short") {
+    return "";
+  }
+
+  if (result.marksAwarded === "" || result.marksAvailable === "") {
+    return "";
+  }
+
+  return `<span class="question-score">[${escapeHTML(result.marksAwarded)}/${escapeHTML(result.marksAvailable)}]</span>`;
 }
+
+//google form
 // function renderFinalActionPage() {
 //   return `
 //     <section class="final-card">
 //       <div>
 //         <h1 class="final-title">Review completed</h1>
-//         <p class="final-copy">You have finished reviewing your answers.</p>
+//         <p class="final-copy">
+//           You have finished reviewing your answers. Click "Finish" to give feedback on this MVP.
+//         </p>
 //       </div>
 //       <div class="final-actions">
 //         <button class="secondary-button final-action-button try-again-button" type="button" data-action="try-again">Try again</button>
@@ -229,6 +249,20 @@ function renderFinalActionPage() {
 //     </section>
 //   `;
 // }
+function renderFinalActionPage() {
+  return `
+    <section class="final-card">
+      <div>
+        <h1 class="final-title">Review completed</h1>
+        <p class="final-copy">You have finished reviewing your answers.</p>
+      </div>
+      <div class="final-actions">
+        <button class="secondary-button final-action-button try-again-button" type="button" data-action="try-again">Try again</button>
+        <button class="primary-button final-action-button" type="button" data-action="finish">Finish</button>
+      </div>
+    </section>
+  `;
+}
 
 function escapeHTML(value) {
   return String(value)
@@ -277,13 +311,13 @@ function handleTryAgain() {
 }
 
 //google form
-function handleFinish() {
-  clearSavedResultSnapshot();
-  window.location.href = "https://docs.google.com/forms/d/e/1FAIpQLSffiKG4zwrWRUN21fPT3O7xyWFL55ZUvTFtmY4fAMVKhydynA/viewform";
-}
 // function handleFinish() {
 //   clearSavedResultSnapshot();
+//   window.location.href = "https://docs.google.com/forms/d/e/1FAIpQLSffiKG4zwrWRUN21fPT3O7xyWFL55ZUvTFtmY4fAMVKhydynA/viewform";
 // }
+function handleFinish() {
+  clearSavedResultSnapshot();
+}
 // INIT
 function initializeApp() {
   const sourceResults = loadResultsFromV1Source();

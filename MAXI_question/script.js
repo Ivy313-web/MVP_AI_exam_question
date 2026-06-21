@@ -304,7 +304,7 @@ function renderQuestion() {
 
   return `
     <section class="exam-card">
-      <h1 class="prompt">${escapeHTML(question.prompt)}</h1>
+      <h1 class="prompt">${getQuestionPromptDisplay(question)}</h1>
       <div class="response-area">
         <div class="response-header">
           <span class="mode-indicator">${getModeIndicatorText()}</span>
@@ -319,6 +319,15 @@ function renderQuestion() {
       </div>
     </section>
   `;
+}
+
+function getQuestionPromptDisplay(question) {
+  const safePrompt = escapeHTML(question.prompt);
+  if (appState.selectedMode === "short") {
+    return question.prompt + "&nbsp;".repeat(6)+`[${getQuestionMarks(question)}]`;
+  }
+
+  return question.prompt;
 }
 
 function renderResponseInput(question) {
@@ -491,16 +500,35 @@ function submitCurrentAnswer() {
 
   const question = appState.questions[appState.currentQuestionIndex];
   const answer = getCurrentAnswerValue();
-  const isCorrect = evaluateAnswer(question, answer, appState.selectedMode);
 
-  appState.answers[appState.currentQuestionIndex] = {
-    questionId: question.id,
-    answer: answer,
-    answerMode: appState.selectedMode,
-    isCorrect: isCorrect
-  };
-  if (isCorrect) {
-    appState.score += question.marks;
+  if (appState.selectedMode === "quiz") {
+    const isCorrect = evaluateAnswer(question, answer, appState.selectedMode);
+
+    appState.answers[appState.currentQuestionIndex] = {
+      questionId: question.id,
+      answer: answer,
+      answerMode: appState.selectedMode,
+      isCorrect: isCorrect
+    };
+
+    if (isCorrect) {
+      appState.score += getQuestionMarks(question);
+    }
+  } else {
+    const grading = gradeShortAnswerDetailed(question, answer);
+
+    appState.answers[appState.currentQuestionIndex] = {
+      questionId: question.id,
+      answer: answer,
+      answerMode: appState.selectedMode,
+      isCorrect: grading.isCorrect,
+      marksAwarded: grading.marksAwarded,
+      marksAvailable: grading.marksAvailable,
+      percentage: grading.percentage,
+      markBreakdown: grading.markBreakdown
+    };
+
+    appState.score += grading.marksAwarded;
   }
 
   moveToNextQuestion();
@@ -511,12 +539,26 @@ function submitCurrentAnswer() {
 function skipCurrentQuestion() {
   const question = appState.questions[appState.currentQuestionIndex];
 
-  appState.answers[appState.currentQuestionIndex] = {
-    questionId: question.id,
-    answer: "",
-    answerMode: appState.selectedMode,
-    isCorrect: false
-  };
+  if (appState.selectedMode === "quiz") {
+    appState.answers[appState.currentQuestionIndex] = {
+      questionId: question.id,
+      answer: "",
+      answerMode: appState.selectedMode,
+      isCorrect: false
+    };
+  } else {
+    appState.answers[appState.currentQuestionIndex] = {
+      questionId: question.id,
+      answer: "",
+      answerMode: appState.selectedMode,
+      isCorrect: false,
+      marksAwarded: 0,
+      marksAvailable: getQuestionMarks(question),
+      percentage: 0,
+      markBreakdown: []
+    };
+  }
+
   moveToNextQuestion();
   renderApp();
 }
@@ -570,7 +612,7 @@ function evaluateAnswer(question, answer, answerMode) {
     return gradeQuizAnswer(question, answer);
   }
 
-  return gradeShortAnswer(question, answer);
+  return gradeShortAnswerDetailed(question, answer).isCorrect;
 }
 
 function gradeQuizAnswer(question, answer) {
@@ -598,6 +640,32 @@ function gradeShortAnswerWithAPI(question, answer) {
   return gradeShortAnswerLocally(question, answer);
 }
 
+function getQuestionMarks(question) {
+  return typeof question.marks === "number" && Number.isFinite(question.marks) ? question.marks : 1;
+}
+
+function calculatePercentage(marksAwarded, marksAvailable) {
+  if (marksAvailable === 0) {
+    return 0;
+  }
+
+  return Math.round((marksAwarded / marksAvailable) * 100);
+}
+
+function gradeShortAnswerDetailed(question, answer) {
+  const marksAvailable = getQuestionMarks(question);
+  const isCorrect = gradeShortAnswer(question, answer);
+  const marksAwarded = isCorrect ? marksAvailable : 0;
+
+  return {
+    isCorrect: isCorrect,
+    marksAwarded: marksAwarded,
+    marksAvailable: marksAvailable,
+    percentage: calculatePercentage(marksAwarded, marksAvailable),
+    markBreakdown: []
+  };
+}
+
 function normalizeAnswer(value) {
   return String(value).trim().toLowerCase().replace(/\s+/g, " ");
 }
@@ -618,9 +686,8 @@ function createResultSnapshot() {
     const savedAnswer = appState.answers[index];
     const questionType = appState.selectedMode;
     const isSkipped = !savedAnswer || normalizeAnswer(savedAnswer.answer) === "";
-    const isCorrect = !isSkipped && evaluateAnswer(question, savedAnswer.answer, questionType);
-
-    return Object.freeze({
+    const isCorrect = !isSkipped && savedAnswer.isCorrect;
+    const snapshotItem = {
       questionId: question.id,
       questionNumber: index + 1,
       questionText: question.prompt,
@@ -629,7 +696,16 @@ function createResultSnapshot() {
       correctAnswer: questionType === "quiz" ? question.quizCorrectAnswer : question.shortAcceptedAnswers[0],
       status: isSkipped ? "skipped" : isCorrect ? "correct" : "incorrect",
       aiExplanation: ""
-    });
+    };
+
+    if (questionType === "short") {
+      snapshotItem.marksAwarded = isSkipped ? 0 : savedAnswer.marksAwarded;
+      snapshotItem.marksAvailable = isSkipped ? getQuestionMarks(question) : savedAnswer.marksAvailable;
+      snapshotItem.percentage = isSkipped ? 0 : savedAnswer.percentage;
+      snapshotItem.markBreakdown = isSkipped ? [] : savedAnswer.markBreakdown;
+    }
+
+    return Object.freeze(snapshotItem);
   }));
 }
 
