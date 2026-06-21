@@ -5,8 +5,9 @@ const RESULT_STORAGE_KEY = "maxiResultSnapshot";
 const CONFIG = {
   topicPanelCollapsed: false,
   topicBranchExpanded: true,
-  useAIGrading: false,
-  modeSelectionPath: "../MAXI_mode/mode.html"
+  useAIGrading: true,
+  modeSelectionPath: "../MAXI_mode/mode.html",
+  mockBackendURL: "http://localhost:3000"
 };
 
 const STATES = {
@@ -304,7 +305,7 @@ function renderQuestion() {
 
   return `
     <section class="exam-card">
-      <h1 class="prompt">${getQuestionPromptDisplay(question)}</h1>
+      <h1 class="prompt">${escapeHTML(question.prompt)}</h1>
       <div class="response-area">
         <div class="response-header">
           <span class="mode-indicator">${getModeIndicatorText()}</span>
@@ -319,15 +320,6 @@ function renderQuestion() {
       </div>
     </section>
   `;
-}
-
-function getQuestionPromptDisplay(question) {
-  const safePrompt = escapeHTML(question.prompt);
-  if (appState.selectedMode === "short") {
-    return question.prompt + "&nbsp;".repeat(6)+`[${getQuestionMarks(question)}]`;
-  }
-
-  return question.prompt;
 }
 
 function renderResponseInput(question) {
@@ -493,7 +485,7 @@ function setCurrentAnswer(answer) {
   };
 }
 
-function submitCurrentAnswer() {
+async function submitCurrentAnswer() {
   if (!hasCurrentAnswer()) {
     return;
   }
@@ -515,7 +507,7 @@ function submitCurrentAnswer() {
       appState.score += getQuestionMarks(question);
     }
   } else {
-    const grading = gradeShortAnswerDetailed(question, answer);
+    const grading = await gradeShortAnswerDetailed(question, answer);
 
     appState.answers[appState.currentQuestionIndex] = {
       questionId: question.id,
@@ -652,19 +644,55 @@ function calculatePercentage(marksAwarded, marksAvailable) {
   return Math.round((marksAwarded / marksAvailable) * 100);
 }
 
-function gradeShortAnswerDetailed(question, answer) {
-  const marksAvailable = getQuestionMarks(question);
-  const isCorrect = gradeShortAnswer(question, answer);
-  const marksAwarded = isCorrect ? marksAvailable : 0;
+// short answer marking
+async function gradeShortAnswerWithAPI(question, answer) {
+  const isLocallyCorrect = gradeShortAnswerLocally(question, answer);
+  const frontendStatus = isLocallyCorrect ? "correct" : "incorrect";
 
-  return {
-    isCorrect: isCorrect,
-    marksAwarded: marksAwarded,
-    marksAvailable: marksAvailable,
-    percentage: calculatePercentage(marksAwarded, marksAvailable),
-    markBreakdown: []
-  };
+  try {
+    const response = await fetch(`${CONFIG.mockBackendURL}/api/grade-short-answer`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        questionId: question.id,
+        userAnswer: answer,
+        status: frontendStatus
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Mock backend request failed with status ${response.status}`);
+    }
+
+    const grading = await response.json();
+
+    return {
+      isCorrect: grading.isCorrect,
+      marksAwarded: grading.marksAwarded,
+      marksAvailable: grading.marksAvailable,
+      percentage: grading.percentage,
+      markBreakdown: grading.markBreakdown || []
+    };
+  } catch (error) {
+    console.error("Mock backend grading failed. Falling back to local grading:", error);
+    return gradeShortAnswerLocallyDetailed(question, answer);
+  }
 }
+// function gradeShortAnswerDetailed(question, answer) {
+//   const marksAvailable = getQuestionMarks(question);
+//   const isCorrect = gradeShortAnswer(question, answer);
+//   const marksAwarded = isCorrect ? marksAvailable : 0;
+//
+//   return {
+//     isCorrect: isCorrect,
+//     marksAwarded: marksAwarded,
+//     marksAvailable: marksAvailable,
+//     percentage: calculatePercentage(marksAwarded, marksAvailable),
+//     markBreakdown: []
+//   };
+// }
 
 function normalizeAnswer(value) {
   return String(value).trim().toLowerCase().replace(/\s+/g, " ");
