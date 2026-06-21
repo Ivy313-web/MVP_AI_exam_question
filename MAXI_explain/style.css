@@ -115,6 +115,18 @@ button {
   gap: 12px;
 }
 
+.question-heading {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 7px;
+}
+
+.question-score {
+  color: var(--color-muted);
+  font-size: 0.86rem;
+  font-weight: 750;
+}
+
 .status-label {
   border-radius: 999px;
   padding: 5px 11px;
