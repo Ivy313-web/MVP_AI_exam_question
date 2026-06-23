@@ -5,7 +5,6 @@ const RESULT_STORAGE_KEY = "maxiResultSnapshot";
 const CONFIG = {
   topicPanelCollapsed: false,
   topicBranchExpanded: true,
-  useAIGrading: true,
   modeSelectionPath: "../MAXI_mode/mode.html",
   mockBackendURL: "http://localhost:3000"
 };
@@ -43,160 +42,26 @@ const rawTopicTree = {
   ]
 };
 
-// QUESTION DATA
-const rawQuestions = [
-  {
-    id: "q1",
-    topic: {
-      level1: "Topic",
-      level2: "Physics",
-      level3: "Projectile Motion"
-    },
-    prompt: "Which component of velocity remains constant in ideal projectile motion when air resistance is ignored?",
-    quizOptions: ["Horizontal velocity", "Vertical velocity", "Resultant velocity", "Terminal velocity"],
-    quizCorrectAnswer: "Horizontal velocity",
-    shortAcceptedAnswers: ["horizontal velocity", "horizontal component of velocity", "x velocity"],
-    marks: 1
-  },
-  {
-    id: "q2",
-    topic: {
-      level1: "Topic",
-      level2: "Physics",
-      level3: "Projectile Motion"
-    },
-    prompt: "What is the vertical acceleration of a projectile near Earth's surface, ignoring air resistance?",
-    quizOptions: ["0 m/s^2", "9.8 m/s^2 downward", "9.8 m/s upward", "It changes with speed"],
-    quizCorrectAnswer: "9.8 m/s^2 downward",
-    shortAcceptedAnswers: ["9.8 m/s^2 downward", "9.8 metres per second squared downward", "g downward", "gravity downward"],
-    marks: 1
-  },
-  {
-    id: "q3",
-    topic: {
-      level1: "Topic",
-      level2: "Physics",
-      level3: "Projectile Motion"
-    },
-    prompt: "At the highest point of a projectile's path, what is its vertical velocity?",
-    quizOptions: ["Zero", "Maximum", "Equal to horizontal velocity", "Equal to acceleration"],
-    quizCorrectAnswer: "Zero",
-    shortAcceptedAnswers: ["zero", "0", "0 m/s"],
-    marks: 1
-  },
-  {
-    id: "q4",
-    topic: {
-      level1: "Topic",
-      level2: "Physics",
-      level3: "Projectile Motion"
-    },
-    prompt: "What shape is the path of an ideal projectile?",
-    quizOptions: ["Parabola", "Circle", "Ellipse", "Straight line"],
-    quizCorrectAnswer: "Parabola",
-    shortAcceptedAnswers: ["parabola", "parabolic", "a parabola"],
-    marks: 1
-  },
-  {
-    id: "q5",
-    topic: {
-      level1: "Topic",
-      level2: "Physics",
-      level3: "Projectile Motion"
-    },
-    prompt: "Which force acts on an ideal projectile after launch when air resistance is ignored?",
-    quizOptions: ["Weight", "Thrust", "Drag", "Normal reaction"],
-    quizCorrectAnswer: "Weight",
-    shortAcceptedAnswers: ["weight", "gravity", "gravitational force"],
-    marks: 1
-  },
-  {
-    id: "q6",
-    topic: {
-      level1: "Topic",
-      level2: "Physics",
-      level3: "Projectile Motion"
-    },
-    prompt: "For launch and landing at the same height, which launch angle gives maximum range?",
-    quizOptions: ["45 degrees", "30 degrees", "60 degrees", "90 degrees"],
-    quizCorrectAnswer: "45 degrees",
-    shortAcceptedAnswers: ["45 degrees", "45"],
-    marks: 1
-  },
-  {
-    id: "q7",
-    topic: {
-      level1: "Topic",
-      level2: "Physics",
-      level3: "Projectile Motion"
-    },
-    prompt: "If initial speed is fixed, what happens to time of flight when the vertical launch component increases?",
-    quizOptions: ["It increases", "It decreases", "It becomes zero", "It is unaffected"],
-    quizCorrectAnswer: "It increases",
-    shortAcceptedAnswers: ["it increases", "increases", "gets longer", "time of flight increases"],
-    marks: 1
-  },
-  {
-    id: "q8",
-    topic: {
-      level1: "Topic",
-      level2: "Physics",
-      level3: "Projectile Motion"
-    },
-    prompt: "Which initial velocity component determines the range when time of flight is known?",
-    quizOptions: ["Horizontal component", "Vertical component", "Acceleration component", "Resultant component"],
-    quizCorrectAnswer: "Horizontal component",
-    shortAcceptedAnswers: ["horizontal component", "horizontal velocity", "horizontal component of velocity"],
-    marks: 1
-  },
-  {
-    id: "q9",
-    topic: {
-      level1: "Topic",
-      level2: "Physics",
-      level3: "Projectile Motion"
-    },
-    prompt: "What assumption allows horizontal acceleration to be zero in projectile motion?",
-    quizOptions: ["No air resistance", "Constant mass", "Small launch angle", "High launch speed"],
-    quizCorrectAnswer: "No air resistance",
-    shortAcceptedAnswers: ["no air resistance", "air resistance ignored", "ignore air resistance", "no drag"],
-    marks: 1
-  },
-  {
-    id: "q10",
-    topic: {
-      level1: "Topic",
-      level2: "Physics",
-      level3: "Projectile Motion"
-    },
-    prompt: "What is the horizontal displacement of a projectile commonly called?",
-    quizOptions: ["Range", "Height", "Amplitude", "Period"],
-    quizCorrectAnswer: "Range",
-    shortAcceptedAnswers: ["range", "horizontal range"],
-    marks: 1
-  }
-];
+// QUESTION DATA SOURCE
+async function loadQuestionsFromBackend() {
+  const response = await fetch(`${CONFIG.mockBackendURL}/api/questions`);
 
-// QUESTION FACTORY
-function createQuestion(raw) {
-  return {
-    id: raw.id,
-    topic: {
-      level1: raw.topic.level1,
-      level2: raw.topic.level2,
-      level3: raw.topic.level3
-    },
-    prompt: raw.prompt,
-    quizOptions: raw.quizOptions.slice(),
-    quizCorrectAnswer: raw.quizCorrectAnswer,
-    shortAcceptedAnswers: raw.shortAcceptedAnswers.slice(),
-    marks: raw.marks
-  };
+  if (!response.ok) {
+    throw new Error(`Failed to load questions from backend with status ${response.status}`);
+  }
+
+  const data = await response.json();
+
+  if (!Array.isArray(data.questions)) {
+    throw new Error("Backend questions response is missing a questions array");
+  }
+
+  return data.questions;
 }
 
-function initializeQuestions() {
+async function initializeQuestions() {
   appState.topicTree = rawTopicTree;
-  appState.questions = rawQuestions.map(createQuestion);
+  appState.questions = await loadQuestionsFromBackend();
 }
 
 // RENDER
@@ -358,12 +223,6 @@ function renderResult() {
 }
 
 function getCurrentTopic() {
-  const question = appState.questions[appState.currentQuestionIndex];
-
-  if (question) {
-    return question.topic;
-  }
-
   const firstBranch = appState.topicTree.children[0];
   const firstLeaf = firstBranch.children[0];
 
@@ -485,6 +344,27 @@ function setCurrentAnswer(answer) {
   };
 }
 
+async function submitAnswerToBackend(question, answer, isSkipped = false) {
+  const response = await fetch(`${CONFIG.mockBackendURL}/api/grade-answer`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      questionId: question.id,
+      questionType: appState.selectedMode,
+      userAnswer: isSkipped ? "Skipped" : answer,
+      isSkipped: isSkipped
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error(`Backend grading failed with status ${response.status}`);
+  }
+
+  return await response.json();
+}
+
 async function submitCurrentAnswer() {
   if (!hasCurrentAnswer()) {
     return;
@@ -493,66 +373,57 @@ async function submitCurrentAnswer() {
   const question = appState.questions[appState.currentQuestionIndex];
   const answer = getCurrentAnswerValue();
 
-  if (appState.selectedMode === "quiz") {
-    const isCorrect = evaluateAnswer(question, answer, appState.selectedMode);
+  try {
+    const grading = await submitAnswerToBackend(question, answer);
 
     appState.answers[appState.currentQuestionIndex] = {
       questionId: question.id,
-      answer: answer,
-      answerMode: appState.selectedMode,
-      isCorrect: isCorrect
-    };
-
-    if (isCorrect) {
-      appState.score += getQuestionMarks(question);
-    }
-  } else {
-    const grading = await gradeShortAnswerDetailed(question, answer);
-
-    appState.answers[appState.currentQuestionIndex] = {
-      questionId: question.id,
-      answer: answer,
+      answer: grading.userAnswer,
       answerMode: appState.selectedMode,
       isCorrect: grading.isCorrect,
+      status: grading.status,
+      correctAnswer: grading.correctAnswer,
       marksAwarded: grading.marksAwarded,
       marksAvailable: grading.marksAvailable,
       percentage: grading.percentage,
-      markBreakdown: grading.markBreakdown
+      markBreakdown: grading.markBreakdown || [],
+      feedback: grading.feedback || ""
     };
 
-    appState.score += grading.marksAwarded;
+    appState.score += grading.marksAwarded || 0;
+
+    moveToNextQuestion();
+    renderApp();
+  } catch (error) {
+    console.error("Failed to submit answer to backend:", error);
   }
-
-  moveToNextQuestion();
-
-  renderApp();
 }
 
-function skipCurrentQuestion() {
+async function skipCurrentQuestion() {
   const question = appState.questions[appState.currentQuestionIndex];
 
-  if (appState.selectedMode === "quiz") {
-    appState.answers[appState.currentQuestionIndex] = {
-      questionId: question.id,
-      answer: "",
-      answerMode: appState.selectedMode,
-      isCorrect: false
-    };
-  } else {
+  try {
+    const grading = await submitAnswerToBackend(question, "", true);
+
     appState.answers[appState.currentQuestionIndex] = {
       questionId: question.id,
       answer: "",
       answerMode: appState.selectedMode,
       isCorrect: false,
-      marksAwarded: 0,
-      marksAvailable: getQuestionMarks(question),
-      percentage: 0,
-      markBreakdown: []
+      status: grading.status || "skipped",
+      correctAnswer: grading.correctAnswer,
+      marksAwarded: grading.marksAwarded || 0,
+      marksAvailable: grading.marksAvailable,
+      percentage: grading.percentage || 0,
+      markBreakdown: grading.markBreakdown || [],
+      feedback: grading.feedback || ""
     };
-  }
 
-  moveToNextQuestion();
-  renderApp();
+    moveToNextQuestion();
+    renderApp();
+  } catch (error) {
+    console.error("Failed to skip question through backend:", error);
+  }
 }
 
 function moveToNextQuestion() {
@@ -598,105 +469,6 @@ function handleConfirmQuit() {
   }
 }
 
-// EVALUATION
-function evaluateAnswer(question, answer, answerMode) {
-  if (answerMode === "quiz") {
-    return gradeQuizAnswer(question, answer);
-  }
-
-  return gradeShortAnswerDetailed(question, answer).isCorrect;
-}
-
-function gradeQuizAnswer(question, answer) {
-  return normalizeAnswer(answer) === normalizeAnswer(question.quizCorrectAnswer);
-}
-
-function gradeShortAnswer(question, answer) {
-  if (CONFIG.useAIGrading) {
-    return gradeShortAnswerWithAPI(question, answer);
-  }
-
-  return gradeShortAnswerLocally(question, answer);
-}
-
-function gradeShortAnswerLocally(question, answer) {
-  return question.shortAcceptedAnswers.some((acceptedAnswer) => {
-    return normalizeAnswer(answer) === normalizeAnswer(acceptedAnswer);
-  });
-}
-
-function gradeShortAnswerWithAPI(question, answer) {
-  // Future API grading placeholder.
-  // This public MVP keeps API grading disabled by default.
-  // For now, it safely falls back to local grading.
-  return gradeShortAnswerLocally(question, answer);
-}
-
-function getQuestionMarks(question) {
-  return typeof question.marks === "number" && Number.isFinite(question.marks) ? question.marks : 1;
-}
-
-function calculatePercentage(marksAwarded, marksAvailable) {
-  if (marksAvailable === 0) {
-    return 0;
-  }
-
-  return Math.round((marksAwarded / marksAvailable) * 100);
-}
-
-// short answer marking
-async function gradeShortAnswerWithAPI(question, answer) {
-  const isLocallyCorrect = gradeShortAnswerLocally(question, answer);
-  const frontendStatus = isLocallyCorrect ? "correct" : "incorrect";
-
-  try {
-    const response = await fetch(`${CONFIG.mockBackendURL}/api/grade-short-answer`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        questionId: question.id,
-        userAnswer: answer,
-        status: frontendStatus
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error(`Mock backend request failed with status ${response.status}`);
-    }
-
-    const grading = await response.json();
-
-    return {
-      isCorrect: grading.isCorrect,
-      marksAwarded: grading.marksAwarded,
-      marksAvailable: grading.marksAvailable,
-      percentage: grading.percentage,
-      markBreakdown: grading.markBreakdown || []
-    };
-  } catch (error) {
-    console.error("Mock backend grading failed. Falling back to local grading:", error);
-    return gradeShortAnswerLocallyDetailed(question, answer);
-  }
-}
-// function gradeShortAnswerDetailed(question, answer) {
-//   const marksAvailable = getQuestionMarks(question);
-//   const isCorrect = gradeShortAnswer(question, answer);
-//   const marksAwarded = isCorrect ? marksAvailable : 0;
-//
-//   return {
-//     isCorrect: isCorrect,
-//     marksAwarded: marksAwarded,
-//     marksAvailable: marksAvailable,
-//     percentage: calculatePercentage(marksAwarded, marksAvailable),
-//     markBreakdown: []
-//   };
-// }
-
-function normalizeAnswer(value) {
-  return String(value).trim().toLowerCase().replace(/\s+/g, " ");
-}
 
 function getModeFromURL() {
   const params = new URLSearchParams(window.location.search);
@@ -713,24 +485,24 @@ function createResultSnapshot() {
   appState.resultSnapshot = Object.freeze(appState.questions.map((question, index) => {
     const savedAnswer = appState.answers[index];
     const questionType = appState.selectedMode;
-    const isSkipped = !savedAnswer || normalizeAnswer(savedAnswer.answer) === "";
-    const isCorrect = !isSkipped && savedAnswer.isCorrect;
+    const isSkipped = !savedAnswer || savedAnswer.status === "skipped";
+
     const snapshotItem = {
       questionId: question.id,
       questionNumber: index + 1,
       questionText: question.prompt,
       questionType: questionType,
       userAnswer: isSkipped ? "Skipped" : savedAnswer.answer,
-      correctAnswer: questionType === "quiz" ? question.quizCorrectAnswer : question.shortAcceptedAnswers[0],
-      status: isSkipped ? "skipped" : isCorrect ? "correct" : "incorrect",
+      correctAnswer: savedAnswer ? savedAnswer.correctAnswer : "",
+      status: savedAnswer ? savedAnswer.status : "skipped",
       aiExplanation: ""
     };
 
-    if (questionType === "short") {
-      snapshotItem.marksAwarded = isSkipped ? 0 : savedAnswer.marksAwarded;
-      snapshotItem.marksAvailable = isSkipped ? getQuestionMarks(question) : savedAnswer.marksAvailable;
-      snapshotItem.percentage = isSkipped ? 0 : savedAnswer.percentage;
-      snapshotItem.markBreakdown = isSkipped ? [] : savedAnswer.markBreakdown;
+    if (typeof savedAnswer?.marksAwarded === "number" || typeof savedAnswer?.marksAvailable === "number") {
+      snapshotItem.marksAwarded = savedAnswer?.marksAwarded || 0;
+      snapshotItem.marksAvailable = savedAnswer?.marksAvailable || 0;
+      snapshotItem.percentage = savedAnswer?.percentage || 0;
+      snapshotItem.markBreakdown = savedAnswer?.markBreakdown || [];
     }
 
     return Object.freeze(snapshotItem);
@@ -742,7 +514,6 @@ function getFrozenResultSnapshot() {
 }
 
 // API PLACEHOLDERS
-async function loadQuestionsFromAPI() {}
 
 async function loadTopicTreeFromAPI() {}
 
@@ -750,5 +521,23 @@ async function saveAttemptToAPI() {}
 
 async function getAIExplanationFromAPI() {}
 
-initializeQuestions();
-renderApp();
+async function init() {
+  try {
+    await initializeQuestions();
+    renderApp();
+  } catch (error) {
+    console.error("Failed to initialise MAXI Question Part:", error);
+
+    const root = document.getElementById("root");
+    root.innerHTML = `
+      <main class="app-shell">
+        <section class="exam-card">
+          <h1 class="prompt">Unable to load questions</h1>
+          <p>Please make sure the backend server is running at ${escapeHTML(CONFIG.mockBackendURL)}.</p>
+        </section>
+      </main>
+    `;
+  }
+}
+
+init();
