@@ -23,6 +23,7 @@ const appState = {
   score: 0,
   topicTree: {},
   selectedMode: getModeFromURL(),
+  attemptId: crypto.randomUUID(),
   resultSnapshot: [],
   quitModalOpen: false
 };
@@ -351,6 +352,7 @@ async function submitAnswerToBackend(question, answer, isSkipped = false) {
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
+      attemptId: appState.attemptId,
       questionId: question.id,
       questionType: appState.selectedMode,
       userAnswer: isSkipped ? "Skipped" : answer,
@@ -363,6 +365,78 @@ async function submitAnswerToBackend(question, answer, isSkipped = false) {
   }
 
   return await response.json();
+}
+
+async function finalizeAttemptWithBackend() {
+  const response = await fetch(`${CONFIG.mockBackendURL}/api/finalize-attempt`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      attemptId: appState.attemptId
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error(`Backend finalize failed with status ${response.status}`);
+  }
+
+  return await response.json();
+}
+
+function applyFinalAttemptResults(finalAttempt) {
+  if (!Array.isArray(finalAttempt.results)) {
+    throw new Error("Final attempt response is missing results array");
+  }
+
+  appState.answers = appState.questions.map((question) => {
+    const grading = finalAttempt.results.find((result) => {
+      return result.questionId === question.id;
+    });
+
+    if (!grading) {
+      return {
+        questionId: question.id,
+        answer: "",
+        answerMode: appState.selectedMode,
+        isCorrect: false,
+        status: "skipped",
+        correctAnswer: "",
+        marksAwarded: 0,
+        marksAvailable: question.marks || 0,
+        percentage: 0,
+        markBreakdown: [],
+        feedback: ""
+      };
+    }
+
+    return {
+      questionId: question.id,
+      answer: grading.userAnswer,
+      answerMode: appState.selectedMode,
+      isCorrect: grading.isCorrect,
+      status: grading.status,
+      correctAnswer: grading.correctAnswer,
+      marksAwarded: grading.marksAwarded,
+      marksAvailable: grading.marksAvailable,
+      percentage: grading.percentage,
+      markBreakdown: grading.markBreakdown || [],
+      feedback: grading.feedback || ""
+    };
+  });
+
+  appState.score = appState.answers.reduce((total, answer) => {
+    return total + (answer.marksAwarded || 0);
+  }, 0);
+}
+
+async function finalizeAttemptBeforeResult() {
+  const finalAttempt = await finalizeAttemptWithBackend();
+
+  applyFinalAttemptResults(finalAttempt);
+
+  createResultSnapshot();
 }
 
 async function submitCurrentAnswer() {
@@ -392,7 +466,7 @@ async function submitCurrentAnswer() {
 
     appState.score += grading.marksAwarded || 0;
 
-    moveToNextQuestion();
+    await moveToNextQuestion();
     renderApp();
   } catch (error) {
     console.error("Failed to submit answer to backend:", error);
@@ -419,16 +493,16 @@ async function skipCurrentQuestion() {
       feedback: grading.feedback || ""
     };
 
-    moveToNextQuestion();
+    await moveToNextQuestion();
     renderApp();
   } catch (error) {
     console.error("Failed to skip question through backend:", error);
   }
 }
 
-function moveToNextQuestion() {
+async function moveToNextQuestion() {
   if (appState.currentQuestionIndex + 1 >= appState.questions.length) {
-    createResultSnapshot();
+    await finalizeAttemptBeforeResult();
     appState.currentState = STATES.RESULT;
   } else {
     appState.currentQuestionIndex += 1;
@@ -436,6 +510,11 @@ function moveToNextQuestion() {
 }
 
 function handleCheckResult() {
+  if (!appState.resultSnapshot.length) {
+    console.error("Result snapshot is missing. Attempt may not have been finalized.");
+    return;
+  }
+
   handleOpenExplainPage();
 }
 
@@ -523,6 +602,9 @@ async function getAIExplanationFromAPI() {}
 
 async function init() {
   try {
+    // test
+    console.log("Attempt ID:", appState.attemptId);
+
     await initializeQuestions();
     renderApp();
   } catch (error) {
