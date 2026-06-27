@@ -291,3 +291,62 @@ button {
     width: 100%;
   }
 }
+
+.mark-breakdown {
+  margin-top: 16px;
+}
+
+.mark-breakdown dd {
+  margin: 8px 0 0;
+}
+
+.mark-breakdown-list {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0 0;
+  display: grid;
+  gap: 10px;
+}
+
+.mark-breakdown-item {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+}
+
+.mark-breakdown-symbol {
+  font-weight: 800;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.mark-breakdown-item.is-awarded .mark-breakdown-symbol {
+  color: #15803d;
+}
+
+.mark-breakdown-item.is-missed .mark-breakdown-symbol {
+  color: #b91c1c;
+}
+
+.mark-breakdown-content {
+  display: grid;
+  gap: 4px;
+}
+
+.mark-breakdown-point {
+  margin: 0;
+  font-weight: 650;
+  line-height: 1.45;
+}
+
+.mark-breakdown-reason {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.95rem;
+  line-height: 1.45;
+}

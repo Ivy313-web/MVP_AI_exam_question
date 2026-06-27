@@ -99,8 +99,11 @@ function convertV1SnapshotToExplainResult(snapshotItem) {
   };
 
   if (questionType === "short") {
-    result.marksAwarded = getSafeMarksAwarded(snapshotItem);
-    result.marksAvailable = getSafeMarksAvailable(snapshotItem);
+  result.marksAwarded = getSafeMarksAwarded(snapshotItem);
+  result.marksAvailable = getSafeMarksAvailable(snapshotItem);
+  result.markBreakdown = Array.isArray(snapshotItem.markBreakdown)
+    ? snapshotItem.markBreakdown
+    : [];
   }
 
   return Object.freeze(result);
@@ -153,7 +156,7 @@ function requestAIExplanation(questionResult) {
 function requestAllAIExplanations(results) {
   return results.map(result => Object.freeze({
     ...result,
-    aiExplanation: requestAIExplanation(result)
+    aiExplanation: result.aiExplanation || requestAIExplanation(result)
   }));
 }
 
@@ -215,6 +218,7 @@ function renderReviewCard(result) {
           <dt>AI explain</dt>
           <dd>${escapeHTML(result.aiExplanation)}</dd>
         </div>
+        ${renderMarkBreakdown(result)}
       </dl>
     </article>
   `;
@@ -230,6 +234,31 @@ function renderQuestionScore(result) {
   }
 
   return `<span class="question-score">[${escapeHTML(result.marksAwarded)}/${escapeHTML(result.marksAvailable)}]</span>`;
+}
+
+function renderMarkBreakdown(result) {
+  if (!Array.isArray(result.markBreakdown) || result.markBreakdown.length === 0) {
+    return "";
+  }
+
+  return `
+    <div class="review-detail mark-breakdown">
+      <dt>Mark breakdown</dt>
+      <dd>
+        <ul class="mark-breakdown-list">
+          ${result.markBreakdown.map((item) => `
+            <li class="mark-breakdown-item ${item.awarded ? "is-awarded" : "is-missed"}">
+              <span class="mark-breakdown-symbol">${item.awarded ? "✓" : "✗"}</span>
+              <div class="mark-breakdown-content">
+                <p class="mark-breakdown-point">${escapeHTML(item.point)}</p>
+                <p class="mark-breakdown-reason">${escapeHTML(item.reason)}</p>
+              </div>
+            </li>
+          `).join("")}
+        </ul>
+      </dd>
+    </div>
+  `;
 }
 
 //google form

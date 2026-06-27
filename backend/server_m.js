@@ -1,9 +1,11 @@
-
 // API
 require("dotenv").config();
 
 const Groq = require("groq-sdk");
 
+//connect to ai question prompt
+const fs = require("fs");
+const path = require("path");
 // body
 const express = require("express");
 const cors = require("cors");
@@ -58,21 +60,60 @@ function removeByQuestionId(list, questionId) {
   });
 }
 
+function loadQuestionsFromJsonFile(filePath) {
+  try {
+    if (!fs.existsSync(filePath)) {
+      return [];
+    }
+
+    const rawText = fs.readFileSync(filePath, "utf8");
+
+    if (!rawText.trim()) {
+      return [];
+    }
+
+    const parsed = JSON.parse(rawText);
+
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.error(`Failed to load questions from ${filePath}:`, error.message);
+    return [];
+  }
+}
+
+const generatedConceptQuestions = loadQuestionsFromJsonFile(
+  path.join(__dirname, "data", "generated-concept-questions.json")
+);
+
+const generatedCalculationQuestions = loadQuestionsFromJsonFile(
+  path.join(__dirname, "data", "generated-calculation-questions.json")
+);
+
 //QUESTION
 
 const questionBank = [
+  {
+  id: "q1",
+  topic: {
+    level1: "Topic",
+    level2: "Physics",
+    level3: "Projectile Motion"
+  },
+  prompt: "Which component of velocity remains constant in ideal projectile motion when air resistance is ignored?",
+  quizOptions: ["Horizontal velocity", "Vertical velocity", "Resultant velocity", "Terminal velocity"],
+  quizCorrectAnswer: "Horizontal velocity",
+  shortAcceptedAnswers: [
+    "horizontal velocity",
+    "horizontal component of velocity",
+    "x velocity"
+  ],
+  markScheme: [
     {
-    id: "q1",
-    topic: {
-      level1: "Topic",
-      level2: "Physics",
-      level3: "Projectile Motion"
-    },
-    prompt: "Which component of velocity remains constant in ideal projectile motion when air resistance is ignored?",
-    quizOptions: ["Horizontal velocity", "Vertical velocity", "Resultant velocity", "Terminal velocity"],
-    quizCorrectAnswer: "Horizontal velocity",
-    shortAcceptedAnswers: ["horizontal velocity", "horizontal component of velocity", "x velocity"],
-    marks: 1
+      point: "Identifies the horizontal component of velocity as the component that remains constant.",
+      marks: 1
+    }
+  ],
+  marks: 1
   },
   {
   id: "q2",
@@ -84,31 +125,46 @@ const questionBank = [
   prompt: "Explain the acceleration of a projectile near Earth's surface when air resistance is ignored.",
   quizOptions: ["0 m/s^2", "9.8 m/s^2 downward", "9.8 m/s upward", "It changes with speed"],
   quizCorrectAnswer: "9.8 m/s^2 downward",
-  shortAcceptedAnswers: ["9.8 m/s^2 downward", "9.8 metres per second squared downward", "g downward", "gravity downward"],
+  shortAcceptedAnswers: [
+    "constant 9.8 m/s^2 downward",
+    "constant 9.8 metres per second squared downward",
+    "constant g downward",
+    "constant gravity downward"
+  ],
+  markScheme: [
+  {
+    point: "States that the acceleration has magnitude 9.8 m/s^2 or g.",
+    marks: 1
+  },
+  {
+    point: "States that the acceleration is downward or towards Earth.",
+    marks: 1
+  }
+],
+marks: 2
+  },
+  {
+  id: "q3",
+  topic: {
+    level1: "Topic",
+    level2: "Physics",
+    level3: "Projectile Motion"
+  },
+  prompt: "At the highest point of a projectile's path, what is its vertical velocity?",
+  quizOptions: ["Zero", "Maximum", "Equal to horizontal velocity", "Equal to acceleration"],
+  quizCorrectAnswer: "Zero",
+  shortAcceptedAnswers: [
+    "zero",
+    "0",
+    "0 m/s"
+  ],
   markScheme: [
     {
-      point: "States that the acceleration has magnitude 9.8 m/s^2 or g.",
-      marks: 1
-    },
-    {
-      point: "States that the acceleration is downward or towards Earth.",
+      point: "States that the vertical velocity is zero at the highest point.",
       marks: 1
     }
   ],
-  marks: 2
-  },
-  {
-    id: "q3",
-    topic: {
-      level1: "Topic",
-      level2: "Physics",
-      level3: "Projectile Motion"
-    },
-    prompt: "At the highest point of a projectile's path, what is its vertical velocity?",
-    quizOptions: ["Zero", "Maximum", "Equal to horizontal velocity", "Equal to acceleration"],
-    quizCorrectAnswer: "Zero",
-    shortAcceptedAnswers: ["zero", "0", "0 m/s"],
-    marks: 1
+  marks: 1
   },
   {
     id: "q4",
@@ -124,17 +180,27 @@ const questionBank = [
     marks: 1
   },
   {
-    id: "q5",
-    topic: {
-      level1: "Topic",
-      level2: "Physics",
-      level3: "Projectile Motion"
-    },
-    prompt: "Which force acts on an ideal projectile after launch when air resistance is ignored?",
-    quizOptions: ["Weight", "Thrust", "Drag", "Normal reaction"],
-    quizCorrectAnswer: "Weight",
-    shortAcceptedAnswers: ["weight", "gravity", "gravitational force"],
-    marks: 1
+  id: "q5",
+  topic: {
+    level1: "Topic",
+    level2: "Physics",
+    level3: "Projectile Motion"
+  },
+  prompt: "Which force acts on an ideal projectile after launch when air resistance is ignored?",
+  quizOptions: ["Weight", "Thrust", "Drag", "Normal reaction"],
+  quizCorrectAnswer: "Weight",
+  shortAcceptedAnswers: [
+    "weight",
+    "gravity",
+    "gravitational force"
+  ],
+  markScheme: [
+    {
+      point: "States that weight, gravity, or the gravitational force acts on the projectile after launch.",
+      marks: 1
+    }
+  ],
+  marks: 1
   },
   {
     id: "q6",
@@ -176,17 +242,28 @@ const questionBank = [
     marks: 1
   },
   {
-    id: "q9",
-    topic: {
-      level1: "Topic",
-      level2: "Physics",
-      level3: "Projectile Motion"
-    },
-    prompt: "What assumption allows horizontal acceleration to be zero in projectile motion?",
-    quizOptions: ["No air resistance", "Constant mass", "Small launch angle", "High launch speed"],
-    quizCorrectAnswer: "No air resistance",
-    shortAcceptedAnswers: ["no air resistance", "air resistance ignored", "ignore air resistance", "no drag"],
-    marks: 1
+  id: "q9",
+  topic: {
+    level1: "Topic",
+    level2: "Physics",
+    level3: "Projectile Motion"
+  },
+  prompt: "What assumption allows horizontal acceleration to be zero in projectile motion?",
+  quizOptions: ["No air resistance", "Constant mass", "Small launch angle", "High launch speed"],
+  quizCorrectAnswer: "No air resistance",
+  shortAcceptedAnswers: [
+    "no air resistance",
+    "air resistance ignored",
+    "ignore air resistance",
+    "no drag"
+  ],
+  markScheme: [
+    {
+      point: "States that air resistance is ignored or that there is no drag.",
+      marks: 1
+    }
+  ],
+  marks: 1
   },
   {
     id: "q10",
@@ -200,6 +277,34 @@ const questionBank = [
     quizCorrectAnswer: "Range",
     shortAcceptedAnswers: ["range", "horizontal range"],
     marks: 1
+  },
+  {
+  id: "q11",
+  topic: {
+    level1: "Topic",
+    level2: "Physics",
+    level3: "Projectile Motion"
+  },
+  prompt: "Explain why the horizontal velocity of a projectile remains constant when air resistance is ignored.",
+  quizOptions: [
+    "There is no horizontal resultant force",
+    "Gravity acts horizontally",
+    "The vertical velocity is zero",
+    "The projectile has no weight"
+  ],
+  quizCorrectAnswer: "There is no horizontal resultant force",
+  shortAcceptedAnswers: [],
+  markScheme: [
+    {
+      point: "States that there is no horizontal resultant force acting on the projectile.",
+      marks: 1
+    },
+    {
+      point: "Explicitly links the lack of horizontal resultant force to zero horizontal acceleration or to the horizontal velocity remaining constant.",
+      marks: 1
+    }
+  ],
+  marks: 2
   }
 ];
 
@@ -207,6 +312,9 @@ const questionBank = [
 function getPublicQuestion(question) {
   return {
     id: question.id,
+    questionType: question.questionType || "concept",
+    formulaType: question.formulaType || null,
+    topic: question.topic || null,
     prompt: question.prompt,
     quizOptions: question.quizOptions,
     marks: question.marks
@@ -215,13 +323,109 @@ function getPublicQuestion(question) {
 
 // get question method
 app.get("/api/questions", (req, res) => {
-  const publicQuestions = questionBank.map(getPublicQuestion);
+  const publicQuestions = getAllQuestions().map(getPublicQuestion);
+
   res.json({
     questions: publicQuestions
   });
 });
 
+// ---------------------------------------------------------------------------------------
 
+function isValidRuntimeGeneratedQuestion(question) {
+  if (!question || typeof question !== "object") {
+    return false;
+  }
+
+  if (typeof question.id !== "string" || !question.id.trim()) {
+    return false;
+  }
+
+  if (typeof question.prompt !== "string" || !question.prompt.trim()) {
+    return false;
+  }
+
+  if (!Array.isArray(question.quizOptions) || question.quizOptions.length !== 4) {
+    return false;
+  }
+
+  if (
+    typeof question.quizCorrectAnswer !== "string" ||
+    !question.quizOptions.includes(question.quizCorrectAnswer)
+  ) {
+    return false;
+  }
+
+  if (!Array.isArray(question.shortAcceptedAnswers)) {
+    return false;
+  }
+
+  if (!Array.isArray(question.markScheme) || question.markScheme.length === 0) {
+    return false;
+  }
+
+  if (!Number.isInteger(question.marks) || question.marks < 1 || question.marks > 4) {
+    return false;
+  }
+
+  const markSchemeTotal = question.markScheme.reduce((total, point) => {
+    return total + Number(point?.marks || 0);
+  }, 0);
+
+  if (markSchemeTotal !== question.marks) {
+    return false;
+  }
+
+  if (question.questionType === "calculation") {
+    if (question.formulaType !== "F_MA") {
+      return false;
+    }
+
+    if (!question.givenValues || typeof question.givenValues !== "object") {
+      return false;
+    }
+
+    if (!["forceN", "accelerationMs2", "massKg"].includes(question.unknown)) {
+      return false;
+    }
+
+    if (!question.answer || typeof question.answer !== "object") {
+      return false;
+    }
+
+    if (!Number.isFinite(Number(question.answer.value))) {
+      return false;
+    }
+
+    if (typeof question.answer.unit !== "string" || !question.answer.unit.trim()) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+
+function filterRuntimeGeneratedQuestions(questions, label) {
+  const validQuestions = questions.filter(isValidRuntimeGeneratedQuestion);
+  const rejectedCount = questions.length - validQuestions.length;
+
+  if (rejectedCount > 0) {
+    console.warn(`Rejected ${rejectedCount} generated ${label} question(s) while loading.`);
+  }
+
+  return validQuestions;
+}
+
+function getAllQuestions() {
+  return [
+    ...questionBank,
+    ...filterRuntimeGeneratedQuestions(generatedConceptQuestions, "concept"),
+    ...filterRuntimeGeneratedQuestions(generatedCalculationQuestions, "calculation")
+  ];
+}
+
+// ---------------------------------------------------------------------------------------
 // standardize the question
 function normaliseAnswer(answer) {
   return String(answer || "")
@@ -231,7 +435,7 @@ function normaliseAnswer(answer) {
 }
 
 function findQuestionById(questionId) {
-  return questionBank.find((question) => question.id === questionId);
+  return getAllQuestions().find((question) => question.id === questionId);
 }
 
 function getFinalStatus(isSkipped, marksAwarded, marksAvailable) {
@@ -243,24 +447,47 @@ function getFinalStatus(isSkipped, marksAwarded, marksAvailable) {
 }
 
 const aiGradingSchema = {
-  type: "array",
-  items: {
-    type: "object",
-    properties: {
-      questionId: {
-        type: "string"
-      },
-      marksAwarded: {
-        type: "integer"
-      },
-      feedback: {
-        type: "string"
+  type: "object",
+  properties: {
+    results: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: {
+          questionId: {
+            type: "string"
+          },
+          marksAwarded: {
+            type: "integer"
+          },
+          feedback: {
+            type: "string"
+          },
+          markBreakdown: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                point: {
+                  type: "string"
+                },
+                awarded: {
+                  type: "boolean"
+                },
+                reason: {
+                  type: "string"
+                }
+              },
+              required: ["point", "awarded", "reason"]
+            }
+          }
+        },
+        required: ["questionId", "marksAwarded", "feedback", "markBreakdown"]
       }
-    },
-    required: ["questionId", "marksAwarded", "feedback"]
-  }
+    }
+  },
+  required: ["results"]
 };
-
 async function gradePendingAnswersWithMockAI(pendingAIAnswers) {
   return pendingAIAnswers.map((pendingAnswer) => {
     const question = findQuestionById(pendingAnswer.questionId);
@@ -332,17 +559,36 @@ The JSON object must exactly follow this structure:
     {
       "questionId": "q1",
       "marksAwarded": 1,
-      "feedback": "Brief feedback."
+      "feedback": "Brief feedback.",
+      "markBreakdown": [
+        {
+          "point": "The mark scheme point being judged.",
+          "awarded": true,
+          "reason": "Brief reason why this point was or was not awarded."
+        }
+      ]
     }
   ]
 }
 
 Do not output any additional keys.
+Each result must include questionId, marksAwarded, feedback, and markBreakdown.
+markBreakdown must be an array.
+Each markBreakdown item must include point, awarded, and reason.
+The number of markBreakdown items should match the markScheme points when markScheme is provided.
 
 MARKING RULES:
 - Always return one result for every question given.
 - Never skip a question.
 - Never invent or change questionIds.
+- Award marks only for ideas that are clearly present in the student's answer.
+- Do not award marks for information that appears only in the question prompt, correct answer, acceptedAnswers, or markScheme.
+- If the question prompt already gives a condition, do not treat that condition as part of the student's answer unless the student also states it.
+- Do not infer that the student mentioned an idea just because it appears in the question.
+- Do not complete missing reasoning steps for the student.
+- If a markScheme point requires a link or explanation, only award it when the student explicitly states that link or explanation.
+- Do not award a reasoning mark just because the reasoning can be inferred from a correct statement.
+- For example, if the student only states "there is no horizontal resultant force", do not automatically award a separate mark for "zero horizontal acceleration" unless the student also states zero acceleration or explains that the horizontal velocity remains constant.
 - marksAwarded must be an integer.
 - marksAwarded must be between 0 and marksAvailable.
 - Award marks based on scientific meaning, not exact wording.
@@ -354,51 +600,33 @@ MARKING RULES:
 - Accept common student wording such as "downwards" for "towards Earth", and "g" for "9.8 m/s^2".
 - If the answer is ambiguous but likely shows the correct idea, award the mark.
 - Be exam-style fair, not overly strict.
+- For each markScheme point, create one markBreakdown item.
+- Use the exact or very close wording of the markScheme point in markBreakdown.point.
+- markBreakdown.awarded must be true only if that specific point earns marks.
+- markBreakdown.reason must briefly explain why the point was awarded or not awarded.
+- The sum of awarded markScheme point marks should match marksAwarded.
+- If there is no markScheme, return an empty markBreakdown array.
 
-EXAMPLES:
+CALCULATION QUESTION MARKING RULES:
+- For calculation questions, mark by numerical value, unit meaning, and working shown.
+- Do not use exact string matching for units, but do not guess unclear units.
+- Accept only clearly recognisable equivalent units.
 
-Input:
-{
-  "questionId": "q1",
-  "prompt": "Which component of velocity remains constant in ideal projectile motion when air resistance is ignored?",
-  "userAnswer": "the sideways speed stays the same",
-  "correctAnswer": "Horizontal velocity",
-  "acceptedAnswers": ["horizontal velocity", "horizontal component of velocity", "x velocity"],
-  "marksAvailable": 1
-}
+Unit equivalence:
+- Force: accept "N", "n", "newton", "newtons".
+- Mass: accept "kg", "kilogram", "kilograms".
+- Acceleration: accept "m/s²", "m/s^2", "m s-2", "m s^-2", "metres per second squared", "meters per second squared".
+- Minor capitalization and spacing differences are acceptable.
+- Random, unclear, or heavily misspelled unit-like words are not acceptable.
+- Example: "20 newton" is equivalent to "20 N", but "20 nastwn" is not.
 
-Output:
-{
-  "results": [
-    {
-      "questionId": "q1",
-      "marksAwarded": 1,
-      "feedback": "Correct. You identified the horizontal component of velocity."
-    }
-  ]
-}
-
-Input:
-{
-  "questionId": "q2",
-  "prompt": "What is the vertical acceleration of a projectile near Earth's surface, ignoring air resistance?",
-  "userAnswer": "it moves faster",
-  "correctAnswer": "9.8 m/s^2 downward",
-  "acceptedAnswers": ["9.8 m/s^2 downward", "g downward", "gravity downward"],
-  "marksAvailable": 1
-}
-
-Output:
-{
-  "results": [
-    {
-      "questionId": "q2",
-      "marksAwarded": 0,
-      "feedback": "This is too vague. You need to state the downward acceleration due to gravity."
-    }
-  ]
-}
-
+For 2-mark calculation questions:
+- Award the working mark if the student shows a valid formula, rearrangement, substitution, or calculation method.
+- Award the final-answer mark only if the numerical value is correct and the unit is clearly equivalent to the expected unit.
+- If the final value and unit are correct but no working is shown, award only the final-answer mark.
+- If working is correct but the final value or unit is wrong, award only the working mark.
+- If the value is correct but the unit is missing, wrong, or unclear, do not award the final-answer mark.
+- Do not give full marks for a final answer only when the mark scheme separately requires working.
 Questions to mark:
 ${JSON.stringify(gradingItems, null, 2)}
 `;
@@ -431,6 +659,25 @@ ${JSON.stringify(gradingItems, null, 2)}
   throw new Error("Groq returned JSON but not an array or results array");
 }
 
+function normalizeMarkBreakdown(markBreakdown, question) {
+  if (!Array.isArray(markBreakdown)) {
+    return [];
+  }
+
+  return markBreakdown.map((item) => {
+    return {
+      point:
+        typeof item?.point === "string" && item.point.trim()
+          ? item.point.trim()
+          : "Mark scheme point",
+      awarded: item?.awarded === true,
+      reason:
+        typeof item?.reason === "string" && item.reason.trim()
+          ? item.reason.trim()
+          : ""
+    };
+  });
+}
 function normalizeAIGradingResult(aiResult, pendingAnswer) {
   const question = findQuestionById(pendingAnswer.questionId);
   const marksAvailable = pendingAnswer.marksAvailable || question?.marks || 1;
@@ -465,7 +712,7 @@ function normalizeAIGradingResult(aiResult, pendingAnswer) {
       typeof aiResult?.feedback === "string" && aiResult.feedback.trim()
         ? aiResult.feedback.trim()
         : "AI checked this answer, but no feedback was returned.",
-    markBreakdown: []
+    markBreakdown: normalizeMarkBreakdown(aiResult?.markBreakdown, question)
   };
 }
 
@@ -489,7 +736,7 @@ function createAttemptSummary(results) {
 }
 
 function sortResultsByQuestionOrder(results) {
-  return questionBank
+  return getAllQuestions()
     .map((question) => {
       return results.find((result) => result.questionId === question.id);
     })
