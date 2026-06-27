@@ -562,7 +562,10 @@ function getModeFromURL() {
 
 function createResultSnapshot() {
   appState.resultSnapshot = Object.freeze(appState.questions.map((question, index) => {
-    const savedAnswer = appState.answers[index];
+    const savedAnswer = appState.answers.find((answer) => {
+      return answer.questionId === question.id;
+    });
+
     const questionType = appState.selectedMode;
     const isSkipped = !savedAnswer || savedAnswer.status === "skipped";
 
@@ -574,20 +577,16 @@ function createResultSnapshot() {
       userAnswer: isSkipped ? "Skipped" : savedAnswer.answer,
       correctAnswer: savedAnswer ? savedAnswer.correctAnswer : "",
       status: savedAnswer ? savedAnswer.status : "skipped",
-      aiExplanation: ""
+      aiExplanation: savedAnswer?.feedback || "",
+      marksAwarded: savedAnswer?.marksAwarded || 0,
+      marksAvailable: savedAnswer?.marksAvailable || question.marks || 0,
+      percentage: savedAnswer?.percentage || 0,
+      markBreakdown: savedAnswer?.markBreakdown || []
     };
-
-    if (typeof savedAnswer?.marksAwarded === "number" || typeof savedAnswer?.marksAvailable === "number") {
-      snapshotItem.marksAwarded = savedAnswer?.marksAwarded || 0;
-      snapshotItem.marksAvailable = savedAnswer?.marksAvailable || 0;
-      snapshotItem.percentage = savedAnswer?.percentage || 0;
-      snapshotItem.markBreakdown = savedAnswer?.markBreakdown || [];
-    }
 
     return Object.freeze(snapshotItem);
   }));
 }
-
 function getFrozenResultSnapshot() {
   return appState.resultSnapshot;
 }
