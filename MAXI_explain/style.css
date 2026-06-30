@@ -350,3 +350,12 @@ button {
   font-size: 0.95rem;
   line-height: 1.45;
 }
+
+.review-card--partial {
+  border-left-color: #8fb9a8;
+}
+
+.status-label--partial {
+  background: #eef7f3;
+  color: #3f6f5f;
+}
