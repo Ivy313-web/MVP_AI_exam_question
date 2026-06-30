@@ -21,89 +21,257 @@ const CONFIG = {
   level: "A-level",
   topic: "Forces and Newton's Laws",
   level1: "Forces and Motion",
+
   numberOfQuestionsWanted: 5,
-  maxGenerationAttempts: 2,
-  draftScoreThreshold: 6,
-  finalScoreThreshold: 8,
-  outputFile: path.join(__dirname, "../data/generated-concept-questions.json")
+  numberOfBlueprintsToGenerate: 10,
+
+  blueprintModel: process.env.GROQ_BLUEPRINT_MODEL || "llama-3.3-70b-versatile",
+  assessmentModel: process.env.GROQ_ASSESSMENT_MODEL || "llama-3.3-70b-versatile",
+
+  temperature: 0.1,
+
+  minimumAcceptedByMarks: {
+    1: 3,
+    2: 4
+  },
+  outputFile: path.join(__dirname, "../data/test-generated-concept-questions.json"),
+  useStrictValidator: true
 };
 
-function buildConceptGenerationPrompt(numberOfQuestions) {
-  return `
-You are creating concept-based exam-style short-answer questions for MAXI.
+function normaliseText(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+}
 
-Target:
+async function callGroq(prompt, model) {
+  const completion = await groq.chat.completions.create({
+    model,
+    messages: [
+      {
+        role: "user",
+        content: prompt
+      }
+    ],
+    temperature: CONFIG.temperature,
+    response_format: {
+      type: "json_object"
+    }
+  });
+
+  return JSON.parse(completion.choices[0].message.content);
+}
+
+function buildBlueprintPrompt(numberOfBlueprints) {
+  return `
+Create ${numberOfBlueprints} A-level Physics concept question blueprints for MAXI.
+
+Topic:
 - Subject: ${CONFIG.subject}
 - Level: ${CONFIG.level}
 - Topic: ${CONFIG.topic}
-- Number of questions: ${numberOfQuestions}
 
-Return only valid JSON. Do not include markdown.
-Do not create numerical calculation questions or diagram-based questions.
-Do not over-simplify final questions into 1-mark recall questions.
-Keep explanation, comparison, and cause-effect questions as 2 marks when they contain two genuinely markable ideas.
-Avoid flashcard-style questions that only ask "What type of force..." unless the concept is genuinely being defined.
-Prefer exam-style prompts that require applying or distinguishing the concept in a simple situation.
+Return only valid JSON. No markdown. No extra text.
 
-Question rules:
-- The prompt must be an exam-style question or task, not the answer itself.
-- Do not reveal the answer in the prompt.
-- Do not start prompts with "State that", "Explain that", "Describe that", or "Identify that".
-- Each question must test one narrow concept.
-- Use a mix of definition, explanation, comparison, and cause-effect questions.
-- If the answer depends on a condition, include that condition in the prompt.
-- Do not make every final question 1 mark. Keep 2-mark questions when the prompt asks for explanation, comparison, or cause-effect reasoning.
-- Avoid vague correct answers such as "is linked to". Prefer precise relationships such as "is proportional to", with required conditions.
+A blueprint is NOT a full question. Do not generate quizOptions or markScheme yet.
 
-Question mix requirement:
-- In each batch, generate at least:
-  - 1 definition or state question
-  - 1 explanation question worth 2 marks
-  - 1 comparison question worth 2 marks
-  - 1 cause-effect question worth 2 marks
-- Do not make more than half of the batch simple 1-mark recall questions.
-- A question should not be accepted as strong only because it is easy and safe.
+Each blueprint must define:
+- prompt: exam-style question text
+- intendedIdea: the exact correct scientific idea being tested
+- marks: 1, 2
+- questionSkill: "state", "define", "explain", "compare", or "apply"
+- mustInclude: key ideas that a correct answer or mark scheme must include
+- mustAvoid: common mistakes that must not appear
 
-Quiz rules:
-- Include exactly 4 quizOptions.
-- quizCorrectAnswer must appear exactly inside quizOptions.
-- There must be exactly one clearly best answer.
-- Wrong options must be clearly wrong for this exact prompt.
-- All options should answer the same type of question.
-- Wrong quiz options must be clearly wrong, not just less complete versions of the correct answer.
-
-Marking rules:
-- marks must be 1, 2, or 3.
-- Each markScheme point must be worth exactly 1 mark.
-- marks must equal the number of markScheme points.
-- Multi-mark questions must use shortAcceptedAnswers: [].
-- MarkScheme points must be specific and markable.
-- Do not use vague points such as "correct explanation" or "shows understanding".
-- Do not use circular explanations. For example, do not explain "zero resultant force" by saying "because the net force is zero".
-- workedSolution must explain the idea in 1 to 3 clear sentences.
+Quality rules:
+- Prefer narrow exam-style questions over broad textbook discussion questions.
+- Each question should test one focused concept, not a whole topic summary.
+- Avoid broad prompts such as "describe all forces acting on...", "compare and contrast...", or "explain the relationship between..." unless the expected mark points are very clear.
+- Avoid car friction questions unless the role or direction of friction is clearly specified.
+- Avoid numerical values in concept blueprints unless the question is about conceptual interpretation, not calculation.
+- Avoid questions that combine more than two forces unless the situation is very specific.
+- Use simple exam situations where useful.
+- A 1-mark question tests one clear idea.
+- A 2-mark question requires two separate markable ideas.
+- Do not inflate simple recall into 2 marks.
+- Aim for a mix of 1-mark and 2-mark blueprints.
 
 Physics rules:
-- Newton's First Law: zero resultant force means rest or constant velocity.
-- Newton's Second Law: resultant force is linked to acceleration.
-- For acceleration proportional to resultant force, include "when mass is constant".
+- Zero resultant force means rest or constant velocity.
+- Constant velocity means zero acceleration and zero resultant force.
+- Resultant force causes acceleration in its direction.
+- For F ∝ a, mass must be constant.
+- Do not say force is inversely proportional to mass.
+- Friction acts between surfaces in contact and opposes relative motion or tendency of relative motion.
+- Do not say friction always causes deceleration.
+- Air resistance is drag opposing motion through air.
+- Do not say air resistance always causes deceleration.
 - Normal contact force acts perpendicular to the surface.
-- Friction acts between surfaces in contact; air resistance is drag through air.
-- Friction opposes relative motion or the tendency of relative motion between surfaces in contact.
-- Do not simply say friction always causes deceleration.
+- Do not say normal contact force causes an object to remain at rest.
 
-Draft scoring:
-- Give each draft a draftQualityScore from 0 to 10.
-- 8-10 = strong draft.
-- 6-7 = usable but needs improvement.
-- Below 6 = serious quality issue.
-- Be strict. Do not give 8+ to shallow, circular, ambiguous, or answer-leaking questions.
-- Include short draftQualityIssues.
+Return exactly this JSON:
+{
+  "blueprints": [
+    {
+      "draftId": "blueprint_1",
+      "topic": {
+        "level1": "${CONFIG.level1}",
+        "level2": "${CONFIG.subject}",
+        "level3": "${CONFIG.topic}"
+      },
+      "prompt": "Question text",
+      "intendedIdea": "Exact scientific idea being tested",
+      "marks": 1,
+      "questionSkill": "state",
+      "mustInclude": ["Required idea"],
+      "mustAvoid": ["Common mistake"]
+    }
+  ]
+}
+`;
+}
 
-Return this exact JSON structure:
+function isNonEmptyString(value) {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+function hasKnownPhysicsErrorInText(text) {
+  const normalised = normaliseText(text);
+
+  const forbiddenPatterns = [
+    "force is inversely proportional to mass",
+    "f is inversely proportional to m",
+    "force is directly proportional to acceleration and inversely proportional to mass",
+    "friction causes an object to decelerate",
+    "friction causes an object to accelerate",
+    "friction causes deceleration",
+    "friction causes acceleration",
+    "air resistance causes an object to decelerate",
+    "air resistance causes an object to accelerate",
+    "air resistance causes deceleration",
+    "air resistance causes acceleration",
+    "normal contact force causes an object to remain at rest",
+    "normal contact force opposes motion",
+    "supporting the object's weight",
+    "frictional force is zero",
+    "friction must be zero for constant velocity"
+  ];
+
+  return forbiddenPatterns.some((pattern) => {
+    return normalised.includes(pattern);
+  });
+}
+
+function validateBlueprint(blueprint) {
+  const errors = [];
+
+  if (!isNonEmptyString(blueprint?.draftId)) {
+    errors.push("Missing draftId.");
+  }
+
+  if (!isNonEmptyString(blueprint?.prompt)) {
+    errors.push("Missing prompt.");
+  }
+
+  if (!isNonEmptyString(blueprint?.intendedIdea)) {
+    errors.push("Missing intendedIdea.");
+  }
+
+  if (!Number.isInteger(blueprint?.marks) || blueprint.marks < 1 || blueprint.marks > 2) {
+    errors.push("marks must be 1 or 2.");
+  }
+
+  if (!Array.isArray(blueprint?.mustInclude)) {
+    errors.push("mustInclude must be an array.");
+  }
+
+  if (!Array.isArray(blueprint?.mustAvoid)) {
+    errors.push("mustAvoid must be an array.");
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+}
+function removeDuplicateBlueprints(blueprints) {
+  const seen = new Set();
+
+  return blueprints.filter((blueprint) => {
+    const key = normaliseText(blueprint.prompt);
+
+    if (!key || seen.has(key)) {
+      return false;
+    }
+
+    seen.add(key);
+    return true;
+  });
+}
+
+function buildAssessmentPrompt(blueprints) {
+  return `
+Turn these approved Physics blueprints into full MAXI questions.
+
+Return only valid JSON. No markdown. No extra text.
+Do not change the core prompt meaning.
+Do not add numerical calculation questions.
+
+For each blueprint:
+- Use the blueprint's marks exactly.
+- quizOptions must contain exactly 4 options.
+- quizCorrectAnswer must appear exactly inside quizOptions.
+- Only one quiz option may be clearly correct.
+- Wrong options must be clearly wrong, not partially correct.
+- Keep quizOptions concise. Avoid options longer than one sentence.
+- markScheme must contain exactly one 1-mark point per available mark.
+- Each markScheme point must be a complete sentence, not a short fragment.
+- Each markScheme point must directly answer the prompt.
+- Do not add extra physics claims that are not required to answer the prompt.
+- markScheme points must come from intendedIdea and mustInclude.
+- Do not include anything from mustAvoid.
+- Do not turn mustAvoid statements into negative correct answers.
+- The correct answer should state the positive scientific idea being tested.
+- Do not use "mass is constant" as a markScheme point unless the question specifically asks for an assumption.
+- For force, mass and acceleration questions, use F = ma correctly.
+- If explaining how mass affects acceleration, state that for the same resultant force, a larger mass gives a smaller acceleration.
+- Do not create a 2-mark question if the answer only contains one real scientific idea.
+- Do not use a repeated summary point such as "both oppose motion" if earlier mark points already say this.
+- Multi-mark questions must use shortAcceptedAnswers: [].
+- workedSolution must be 1-2 clear sentences.
+- Do not treat prompt conditions as markScheme points.
+- For 2-mark questions, the two markScheme points must test two clearly different ideas.
+- Do not split "opposes motion" and "acts in the opposite direction to motion" into two separate markScheme points; they are the same idea.
+- Do not use two markScheme points that simply rephrase the same idea.
+- If the second mark point repeats the first, reduce the question to 1 mark.
+- For 1-mark questions, quizCorrectAnswer should be short and direct.
+
+Physics red flags:
+- Do not say force is inversely proportional to mass.
+- Do not say friction always causes deceleration.
+- For friction questions, prefer "opposes relative motion" or "opposes the tendency of relative motion" over "opposite to the object's motion".
+- Do not say air resistance always causes deceleration.
+- Do not say friction is zero just because velocity is constant.
+- Do not say normal contact force causes an object to remain at rest.
+- Do not say normal contact force supports weight unless the object is on a horizontal surface and has no vertical acceleration.
+- Do not create reversed duplicate options such as "A and B" and "B and A".
+- Do not make car friction questions unless the direction of friction is clearly defined by the prompt.
+- Never write "force is inversely proportional to mass".
+- Never write "Newton's Second Law states that force is inversely proportional to mass".
+- Do not say normal contact force opposes or supports weight unless the prompt explicitly says the object is at rest on a horizontal surface.
+- Prefer "normal contact force acts perpendicular to the surface" over "normal contact force supports weight".
+- Do not say friction prevents motion or slows down motion in general. Say friction opposes relative motion or the tendency of relative motion.
+- Describe gravity or weight as acting vertically downwards, not mainly as perpendicular to the surface.
+- Do not say air resistance causes the object to slow down in all situations; say it opposes motion through air.
+- Do not describe gravity mainly as perpendicular to the surface; describe weight or gravity as acting vertically downwards.
+- Do not say air resistance only appears after a parachute opens; air resistance acts whenever the object moves through air.
+
+Return exactly this JSON:
 {
   "questions": [
     {
-      "id": "draft_concept_q1",
+      "draftId": "blueprint_1",
       "topic": {
         "level1": "${CONFIG.level1}",
         "level2": "${CONFIG.subject}",
@@ -120,198 +288,34 @@ Return this exact JSON structure:
         }
       ],
       "marks": 1,
-      "workedSolution": "Brief explanation of the expected answer.",
-      "draftQualityScore": 7,
-      "draftQualityIssues": ["Brief issue if any"]
-    }
-  ]
-}
-`;
-}
-
-function buildConceptOptimisationPrompt(questions) {
-  return `
-You are a strict A-level Physics exam-question optimiser for MAXI.
-
-Improve each draft into a final high-quality exam-style question.
-Return only valid JSON. Do not include markdown.
-Do not create unrelated new questions.
-
-Optimise each question:
-- Fix physics errors and wrong law references.
-- Fix answer-leaking prompts.
-- Fix circular explanations.
-- If an "Explain why" question cannot be meaningfully explained, rewrite it as a "State" or "Define" question.
-- For "Explain why" questions, include a real cause-effect link, law, equation, or principle.
-- Make quizOptions clear, parallel, and with exactly one best answer.
-- Make markScheme points specific, independently markable, and worth 1 mark each.
-- You may change marks between 1 and 3.
-- Compare questions should usually use separate markScheme points for each side of the comparison.
-- Ensure quizCorrectAnswer and markScheme credit the same scientific idea.
-- Improve workedSolution so it explains the idea clearly.
-- Give finalQualityScore from 0 to 10.
-- Only give 8+ if the final question is accurate, clear, non-leaking, exam-style, and suitable for stable AI marking.
-
-Examples of good final questions:
-
-Good 1-mark definition:
-Prompt: "What is meant by the resultant force acting on an object?"
-Mark scheme:
-- "States that the resultant force is the vector sum of all forces acting on the object."
-
-Good 2-mark explanation:
-Prompt: "Explain why an object moving at constant velocity has zero resultant force."
-Mark scheme:
-- "States that constant velocity means zero acceleration."
-- "Links zero acceleration to zero resultant force using Newton's First Law or F = ma."
-
-Good 2-mark comparison:
-Prompt: "Compare friction and air resistance."
-Mark scheme:
-- "States that friction acts between surfaces in contact and opposes relative motion."
-- "States that air resistance is a drag force that opposes motion through air."
-
-Physics checks:
-- Newton's First Law applies to zero resultant force with rest or constant velocity.
-- Newton's Second Law links resultant force and acceleration.
-- For acceleration proportional to resultant force, include "when mass is constant".
-- A non-zero resultant force causes acceleration in the direction of the resultant force.
-- Normal contact force acts perpendicular to the surface.
-- Do not say normal contact force equals weight unless the prompt states horizontal surface and no vertical acceleration.
-- Friction acts between surfaces in contact; air resistance is drag through air.
-
-Return this exact JSON structure:
-{
-  "optimisedQuestions": [
-    {
-      "originalId": "draft_concept_q1",
-      "finalQualityScore": 9,
-      "changesMade": ["Improved mark scheme", "Fixed worked solution"],
-      "question": {
-        "id": "draft_concept_q1",
-        "topic": {
-          "level1": "${CONFIG.level1}",
-          "level2": "${CONFIG.subject}",
-          "level3": "${CONFIG.topic}"
-        },
-        "prompt": "Question text",
-        "quizOptions": ["Option A", "Option B", "Option C", "Option D"],
-        "quizCorrectAnswer": "Correct option",
-        "shortAcceptedAnswers": [],
-        "markScheme": [
-          {
-            "point": "Specific mark scheme point",
-            "marks": 1
-          }
-        ],
-        "marks": 1,
-        "workedSolution": "Brief explanation of the expected answer."
-      }
+      "workedSolution": "Brief explanation."
     }
   ]
 }
 
-Questions to optimise:
-${JSON.stringify(questions, null, 2)}
+Approved blueprints:
+${JSON.stringify(blueprints, null, 2)}
 `;
 }
 
-function normaliseText(value) {
-  return String(value || "")
-    .trim()
-    .toLowerCase()
-    .replace(/\s+/g, " ");
+async function generateBlueprints() {
+  const parsed = await callGroq(
+    buildBlueprintPrompt(CONFIG.numberOfBlueprintsToGenerate),
+    CONFIG.blueprintModel
+  );
+
+  if (!Array.isArray(parsed.blueprints)) {
+    throw new Error("Groq returned JSON, but blueprints is not an array.");
+  }
+
+  return parsed.blueprints;
 }
 
-function scoreQuestionQuality(question) {
-  let score = 10;
-  const reasons = [];
-
-  const prompt = normaliseText(question?.prompt);
-  const answer = normaliseText(question?.quizCorrectAnswer);
-  const solution = normaliseText(question?.workedSolution);
-
-  const markSchemeText = Array.isArray(question?.markScheme)
-    ? question.markScheme.map((point) => normaliseText(point?.point)).join(" ")
-    : "";
-
-  if (answer.includes("linked to") || markSchemeText.includes("linked to")) {
-    score -= 2;
-    reasons.push("Uses vague phrase 'linked to' instead of a precise relationship.");
-  }
-
-  if (
-    markSchemeText.includes("correct condition") ||
-    markSchemeText.includes("correctly referenced") ||
-    markSchemeText.includes("is specified") ||
-    markSchemeText.includes("correct explanation") ||
-    markSchemeText.includes("shows understanding")
-  ) {
-    score -= 3;
-    reasons.push("Mark scheme contains vague or non-markable wording.");
-  }
-
-  if (prompt.includes("explain why") && question.marks < 2) {
-    score -= 2;
-    reasons.push("Explain-why question is probably too shallow for 1 mark.");
-  }
-
-  const circularPatterns = [
-    "because the net force is zero",
-    "because the net force acting on it is zero",
-    "because the resultant force is zero",
-    "because the resultant force is non-zero",
-    "because the force is non-zero",
-    "because it is exerted perpendicular",
-    "because it is exerted by the surface",
-    "because it acts in the direction of the acceleration"
-  ];
-
-  if (
-    prompt.includes("explain") &&
-    circularPatterns.some((pattern) => {
-      return solution.includes(pattern) || markSchemeText.includes(pattern);
-    })
-  ) {
-    score -= 3;
-    reasons.push("Explanation appears circular or shallow.");
-  }
-
-  if (
-    prompt.startsWith("state") &&
-    question.marks > 1 &&
-    markSchemeText.includes("law")
-  ) {
-    score -= 2;
-    reasons.push("Simple state question may be inflated into too many marks.");
-  }
-
-  return {
-    score: Math.max(0, score),
-    reasons
-  };
-}
-
-async function callGroq(prompt) {
-  const completion = await groq.chat.completions.create({
-    model: "llama-3.1-8b-instant",
-    messages: [
-      {
-        role: "user",
-        content: prompt
-      }
-    ],
-    temperature: 0.1,
-    response_format: {
-      type: "json_object"
-    }
-  });
-
-  return JSON.parse(completion.choices[0].message.content);
-}
-
-async function generateConceptQuestions(numberOfQuestions) {
-  const parsed = await callGroq(buildConceptGenerationPrompt(numberOfQuestions));
+async function buildQuestionsFromBlueprints(blueprints) {
+  const parsed = await callGroq(
+    buildAssessmentPrompt(blueprints),
+    CONFIG.assessmentModel
+  );
 
   if (!Array.isArray(parsed.questions)) {
     throw new Error("Groq returned JSON, but questions is not an array.");
@@ -320,14 +324,230 @@ async function generateConceptQuestions(numberOfQuestions) {
   return parsed.questions;
 }
 
-async function optimiseConceptQuestions(questions) {
-  const parsed = await callGroq(buildConceptOptimisationPrompt(questions));
+function normaliseOptionForDuplicateCheck(option) {
+  const text = normaliseText(option);
 
-  if (!Array.isArray(parsed.optimisedQuestions)) {
-    throw new Error("Groq returned JSON, but optimisedQuestions is not an array.");
+  if (!text.includes(" and ")) {
+    return text;
   }
 
-  return parsed.optimisedQuestions;
+  return text
+    .split(" and ")
+    .map((part) => part.trim())
+    .sort()
+    .join(" and ");
+}
+
+function hasDuplicateOptions(options) {
+  const normalisedOptions = options.map(normaliseOptionForDuplicateCheck);
+  return new Set(normalisedOptions).size !== normalisedOptions.length;
+}
+
+function questionContainsKnownPhysicsError(question) {
+  const combinedText = [
+    question?.prompt,
+    question?.quizCorrectAnswer,
+    question?.workedSolution,
+    ...(Array.isArray(question?.markScheme)
+      ? question.markScheme.map((point) => point?.point)
+      : [])
+  ].join(" ");
+
+  return hasKnownPhysicsErrorInText(combinedText);
+}
+
+function markPointRepeatsPromptCondition(prompt, pointText) {
+  const promptText = normaliseText(prompt);
+  const point = normaliseText(pointText);
+
+  const conditionPatterns = [
+    "mass is constant",
+    "constant velocity",
+    "at rest",
+    "when air resistance is ignored",
+    "horizontal surface",
+    "rough surface"
+  ];
+
+  return conditionPatterns.some((pattern) => {
+    return promptText.includes(pattern) && point.includes(pattern);
+  });
+}
+
+function lightlyCheckFinalQuestion(question) {
+  const warnings = [];
+
+  if (!isNonEmptyString(question?.prompt)) {
+    warnings.push("Missing prompt.");
+  }
+
+  if (!Array.isArray(question?.quizOptions) || question.quizOptions.length !== 4) {
+    warnings.push("quizOptions should contain exactly 4 options.");
+  }
+
+  if (!isNonEmptyString(question?.quizCorrectAnswer)) {
+    warnings.push("Missing quizCorrectAnswer.");
+  }
+
+  if (
+    Array.isArray(question?.quizOptions) &&
+    isNonEmptyString(question?.quizCorrectAnswer) &&
+    !question.quizOptions.includes(question.quizCorrectAnswer)
+  ) {
+    warnings.push("quizCorrectAnswer is not exactly included in quizOptions.");
+  }
+
+  if (!Array.isArray(question?.markScheme) || question.markScheme.length === 0) {
+    warnings.push("Missing markScheme.");
+  }
+
+  if (!Number.isInteger(question?.marks) || question.marks < 1 || question.marks > 2) {
+    warnings.push("marks should be 1 or 2 in this test run.");
+  }
+
+  if (Array.isArray(question?.markScheme) && Number.isInteger(question?.marks)) {
+    const totalMarkSchemeMarks = question.markScheme.reduce((sum, point) => {
+      return sum + (Number(point?.marks) || 0);
+    }, 0);
+
+    if (totalMarkSchemeMarks !== question.marks) {
+      warnings.push(`markScheme total ${totalMarkSchemeMarks} does not match marks ${question.marks}.`);
+    }
+    if (Array.isArray(question?.markScheme) && question.markScheme.length >= 2) {
+      const points = question.markScheme.map((point) => normaliseText(point?.point));
+
+      const hasNearDuplicatePoint = points.some((point, index) => {
+        return points.some((otherPoint, otherIndex) => {
+          if (index === otherIndex || !point || !otherPoint) {
+            return false;
+          }
+
+          return point.includes(otherPoint) || otherPoint.includes(point);
+        });
+      });
+
+      if (hasNearDuplicatePoint) {
+        warnings.push("markScheme may contain repeated or overlapping mark points.");
+      }
+    }
+  }
+
+  if (!isNonEmptyString(question?.workedSolution)) {
+    warnings.push("Missing workedSolution.");
+  }
+
+  if (Array.isArray(question?.quizOptions) && hasDuplicateOptions(question.quizOptions)) {
+    warnings.push("quizOptions contain duplicate or reversed duplicate options.");
+  }
+
+  if (questionContainsKnownPhysicsError(question)) {
+    warnings.push("Possible known physics misconception detected.");
+  }
+
+  return {
+    isUsableForReview: warnings.length < 6,
+    warnings
+  };
+}
+
+function validateFinalQuestionExtra(question) {
+  const errors = [];
+
+  if (Array.isArray(question?.quizOptions) && hasDuplicateOptions(question.quizOptions)) {
+    errors.push("quizOptions contain duplicate or reversed duplicate options.");
+  }
+
+  if (questionContainsKnownPhysicsError(question)) {
+    errors.push("Question contains a known physics misconception.");
+  }
+
+  if (Array.isArray(question?.markScheme)) {
+    question.markScheme.forEach((point, index) => {
+      if (markPointRepeatsPromptCondition(question.prompt, point.point)) {
+        errors.push(`markScheme[${index}] repeats a condition already given in the prompt.`);
+      }
+    });
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+}
+
+function validateFinalQuestion(question) {
+  const questionForValidation = {
+    ...question,
+    id: question.id || question.draftId || "temporary_validation_id"
+  };
+
+  const structureValidation = validateQuestionStructure(questionForValidation);
+  const extraValidation = validateFinalQuestionExtra(questionForValidation);
+
+  return {
+    isValid: structureValidation.isValid && extraValidation.isValid,
+    errors: [
+      ...structureValidation.errors,
+      ...extraValidation.errors
+    ]
+  };
+}
+
+function countQuestionsByMarks(questions) {
+  return questions.reduce((counts, question) => {
+    const marks = Number(question?.marks);
+
+    if (Number.isInteger(marks)) {
+      counts[marks] = (counts[marks] || 0) + 1;
+    }
+
+    return counts;
+  }, {});
+}
+
+function hasRequiredMarkMix(questions, requiredByMarks) {
+  const counts = countQuestionsByMarks(questions);
+
+  return Object.entries(requiredByMarks).every(([marks, requiredCount]) => {
+    return (counts[marks] || 0) >= requiredCount;
+  });
+}
+
+function selectQuestionsByRequiredMarkMix(questions, requiredByMarks, limit) {
+  const selected = [];
+  const selectedIndexes = new Set();
+
+  Object.entries(requiredByMarks).forEach(([marksText, requiredCount]) => {
+    const marks = Number(marksText);
+
+    const matchingEntries = questions
+      .map((question, index) => {
+        return {
+          question,
+          index
+        };
+      })
+      .filter((entry) => {
+        return entry.question.marks === marks;
+      });
+
+    matchingEntries.slice(0, requiredCount).forEach((entry) => {
+      selected.push(entry.question);
+      selectedIndexes.add(entry.index);
+    });
+  });
+
+  const remainingSlots = limit - selected.length;
+
+  if (remainingSlots > 0) {
+    const remainingQuestions = questions.filter((question, index) => {
+      return !selectedIndexes.has(index);
+    });
+
+    selected.push(...remainingQuestions.slice(0, remainingSlots));
+  }
+
+  return selected.slice(0, limit);
 }
 
 function loadExistingAcceptedQuestions() {
@@ -342,10 +562,11 @@ function loadExistingAcceptedQuestions() {
   }
 
   const parsed = JSON.parse(rawText);
+
   return Array.isArray(parsed) ? parsed : [];
 }
 
-function saveAcceptedQuestions(questions) {
+function saveQuestions(questions) {
   fs.mkdirSync(path.dirname(CONFIG.outputFile), {
     recursive: true
   });
@@ -357,22 +578,10 @@ function saveAcceptedQuestions(questions) {
   );
 }
 
-function getScore(value) {
-  const score = Number(value);
-
-  if (!Number.isFinite(score)) {
-    return 0;
-  }
-
-  return Math.max(0, Math.min(10, score));
-}
 
 function cleanQuestionForSaving(question, id) {
   const {
-    draftQualityScore,
-    draftQualityIssues,
-    finalQualityScore,
-    changesMade,
+    draftId,
     ...cleanQuestion
   } = question;
 
@@ -388,118 +597,9 @@ function giveFinalIds(questions, existingQuestions) {
   return questions.map((question, index) => {
     return cleanQuestionForSaving(
       question,
-      `gen_concept_q${existingCount + index + 1}`
+      `test_gen_concept_q${existingCount + index + 1}`
     );
   });
-}
-
-function rejectItem(list, item) {
-  list.push(item);
-}
-
-async function collectDraftQuestions() {
-  let draftQuestions = [];
-  const rejectedBeforeOptimisation = [];
-
-  for (let attempt = 1; attempt <= CONFIG.maxGenerationAttempts; attempt += 1) {
-    const remainingNeeded = CONFIG.numberOfQuestionsWanted - draftQuestions.length;
-
-    if (remainingNeeded <= 0) {
-      break;
-    }
-
-    console.log(`\nGeneration attempt ${attempt}/${CONFIG.maxGenerationAttempts}`);
-    console.log(`Need ${remainingNeeded} more draft question(s).`);
-
-    const generatedQuestions = await generateConceptQuestions(remainingNeeded + 1);
-
-    generatedQuestions.forEach((question) => {
-      const validation = validateQuestionStructure(question);
-      const draftQualityScore = getScore(question?.draftQualityScore);
-
-      if (!validation.isValid) {
-        rejectItem(rejectedBeforeOptimisation, {
-          id: question?.id || "unknown",
-          prompt: question?.prompt || "",
-          draftQualityScore,
-          errors: validation.errors
-        });
-        return;
-      }
-
-      if (draftQualityScore < CONFIG.draftScoreThreshold) {
-        rejectItem(rejectedBeforeOptimisation, {
-          id: question?.id || "unknown",
-          prompt: question?.prompt || "",
-          draftQualityScore,
-          errors: question?.draftQualityIssues || [
-            `Draft quality score was below ${CONFIG.draftScoreThreshold}.`
-          ]
-        });
-        return;
-      }
-
-      draftQuestions.push(question);
-    });
-
-    draftQuestions = removeDuplicateQuestions(draftQuestions);
-    draftQuestions = draftQuestions.slice(0, CONFIG.numberOfQuestionsWanted);
-  }
-
-  return {
-    draftQuestions,
-    rejectedBeforeOptimisation
-  };
-}
-
-function selectFinalQuestions(optimisedResults) {
-  const acceptedQuestions = [];
-  const rejectedAfterOptimisation = [];
-
-  optimisedResults.forEach((result) => {
-    const finalQualityScore = getScore(result?.finalQualityScore);
-    const finalQuestion = result?.question;
-
-    if (!finalQuestion || finalQualityScore < CONFIG.finalScoreThreshold) {
-      rejectItem(rejectedAfterOptimisation, {
-        originalId: result?.originalId || "unknown",
-        finalQualityScore,
-        issues: result?.changesMade || [
-          `Final quality score was below ${CONFIG.finalScoreThreshold}.`
-        ]
-      });
-      return;
-    }
-
-    const validation = validateQuestionStructure(finalQuestion);
-
-    if (!validation.isValid) {
-      rejectItem(rejectedAfterOptimisation, {
-        originalId: result?.originalId || "unknown",
-        finalQualityScore,
-        issues: validation.errors
-      });
-      return;
-    }
-    const localQuality = scoreQuestionQuality(finalQuestion);
-
-    if (localQuality.score < CONFIG.finalScoreThreshold) {
-      rejectItem(rejectedAfterOptimisation, {
-        originalId: result?.originalId || "unknown",
-        finalQualityScore,
-        localQualityScore: localQuality.score,
-        issues: localQuality.reasons
-      });
-      return;
-    }
-
-    acceptedQuestions.push(finalQuestion);
-  });
-
-  return {
-    acceptedQuestions,
-    rejectedAfterOptimisation
-  };
 }
 
 async function runPipeline() {
@@ -507,45 +607,133 @@ async function runPipeline() {
     throw new Error("Missing GROQ_API_KEY in .env");
   }
 
-  const {
-    draftQuestions,
-    rejectedBeforeOptimisation
-  } = await collectDraftQuestions();
+  console.log("\nGenerating concept blueprints...");
+  const rawBlueprints = await generateBlueprints();
 
-  console.log(`\nDraft questions passing local gate: ${draftQuestions.length}`);
+  const blueprintResults = rawBlueprints.map((blueprint) => {
+    return {
+      blueprint,
+      validation: validateBlueprint(blueprint)
+    };
+  });
 
-  const optimisedResults = draftQuestions.length > 0
-    ? await optimiseConceptQuestions(draftQuestions)
-    : [];
-
-  const {
-    acceptedQuestions,
-    rejectedAfterOptimisation
-  } = selectFinalQuestions(optimisedResults);
-
-  const existingAcceptedQuestions = loadExistingAcceptedQuestions();
-
-  const finalNewQuestions = giveFinalIds(
-    removeDuplicateQuestions(acceptedQuestions),
-    existingAcceptedQuestions
+  const acceptedBlueprints = removeDuplicateBlueprints(
+    blueprintResults
+      .filter((item) => item.validation.isValid)
+      .map((item) => item.blueprint)
   );
 
-  const allAcceptedQuestions = removeDuplicateQuestions([
-    ...existingAcceptedQuestions,
+  const rejectedBlueprints = blueprintResults
+    .filter((item) => !item.validation.isValid)
+    .map((item) => {
+      return {
+        draftId: item.blueprint?.draftId || "unknown",
+        prompt: item.blueprint?.prompt || "",
+        errors: item.validation.errors
+      };
+    });
+
+  console.log(`Blueprints generated: ${rawBlueprints.length}`);
+  console.log(`Blueprints accepted locally: ${acceptedBlueprints.length}`);
+
+  if (acceptedBlueprints.length === 0) {
+    console.log("\nNo accepted blueprints. Rejected blueprints:");
+    console.log(JSON.stringify(rejectedBlueprints, null, 2));
+    return;
+  }
+
+  console.log("\nBuilding assessment data from accepted blueprints...");
+  const rawQuestions = await buildQuestionsFromBlueprints(acceptedBlueprints);
+
+  const questionResults = rawQuestions.map((question) => {
+    return {
+      question,
+      lightCheck: lightlyCheckFinalQuestion(question)
+    };
+  });
+
+  const validationResults = questionResults.map((item) => {
+    return {
+      question: item.question,
+      lightCheck: item.lightCheck,
+      strictValidation: validateFinalQuestion(item.question)
+    };
+  });
+
+  const acceptedQuestions = CONFIG.useStrictValidator
+    ? removeDuplicateQuestions(
+        validationResults
+          .filter((item) => item.strictValidation.isValid)
+          .map((item) => item.question)
+      )
+    : removeDuplicateQuestions(
+        validationResults.map((item) => item.question)
+      );
+
+  const rejectedQuestions = CONFIG.useStrictValidator
+    ? validationResults
+        .filter((item) => !item.strictValidation.isValid)
+        .map((item) => {
+          return {
+            draftId: item.question?.draftId || "unknown",
+            prompt: item.question?.prompt || "",
+            marks: item.question?.marks || null,
+            errors: item.strictValidation.errors
+          };
+        })
+    : [];
+
+  const reviewWarnings = validationResults.map((item) => {
+    return {
+      draftId: item.question?.draftId || "unknown",
+      prompt: item.question?.prompt || "",
+      marks: item.question?.marks || null,
+      warnings: item.lightCheck.warnings,
+      strictValidatorPassed: item.strictValidation.isValid,
+      strictValidatorErrors: item.strictValidation.errors
+    };
+  });
+  const markCounts = countQuestionsByMarks(acceptedQuestions);
+
+  console.log(`Questions built: ${rawQuestions.length}`);
+  console.log(`Questions accepted locally: ${acceptedQuestions.length}`);
+  console.log("Accepted mark counts:");
+  console.log(JSON.stringify(markCounts, null, 2));
+
+  if (!hasRequiredMarkMix(acceptedQuestions, CONFIG.minimumAcceptedByMarks)) {
+    console.log("\nAccepted questions did not meet required mark mix.");
+    console.log("Required:");
+    console.log(JSON.stringify(CONFIG.minimumAcceptedByMarks, null, 2));
+  }
+
+  const selectedQuestions = acceptedQuestions;
+
+  const existingQuestions = loadExistingAcceptedQuestions();
+
+  const finalNewQuestions = giveFinalIds(selectedQuestions, existingQuestions);
+
+  const allQuestions = removeDuplicateQuestions([
+    ...existingQuestions,
     ...finalNewQuestions
   ]);
 
-  saveAcceptedQuestions(allAcceptedQuestions);
+  saveQuestions(allQuestions);
 
   const summary = {
     requested: CONFIG.numberOfQuestionsWanted,
-    draftsPassingLocalGate: draftQuestions.length,
-    acceptedAfterOptimisation: finalNewQuestions.length,
-    totalSavedQuestions: allAcceptedQuestions.length,
-    rejectedBeforeOptimisation,
-    rejectedAfterOptimisation,
+    rawBlueprints: rawBlueprints.length,
+    acceptedBlueprints: acceptedBlueprints.length,
+    rawQuestions: rawQuestions.length,
+    acceptedQuestions: acceptedQuestions.length,
+    finalNewQuestions: finalNewQuestions.length,
+    totalSavedQuestions: allQuestions.length,
+    markCounts,
+    rejectedBlueprints,
+    rejectedQuestions,
+    reviewWarnings,
     savedTo: CONFIG.outputFile
   };
+
 
   console.log("\nFINAL SUMMARY:");
   console.log(JSON.stringify(summary, null, 2));
@@ -555,5 +743,5 @@ async function runPipeline() {
 }
 
 runPipeline().catch((error) => {
-  console.error("Concept question pipeline failed:", error);
+  console.error("Test concept pipeline failed:", error);
 });

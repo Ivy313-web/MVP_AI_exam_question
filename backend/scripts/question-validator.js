@@ -76,9 +76,82 @@ function isPromptRepeatedAsMarkPoint(prompt, pointText) {
   return point.includes(promptText) || promptText.includes(point);
 }
 
+function hasRepeatedMarkSchemeIdeas(markScheme) {
+  if (!Array.isArray(markScheme) || markScheme.length < 2) {
+    return false;
+  }
+
+  const points = markScheme.map((point) => normaliseText(point?.point));
+
+  return points.some((point, index) => {
+    return points.some((otherPoint, otherIndex) => {
+      if (index === otherIndex || !point || !otherPoint) {
+        return false;
+      }
+
+      return point.includes(otherPoint) || otherPoint.includes(point);
+    });
+  });
+}
+
+function normaliseOptionForDuplicateCheck(option) {
+  const text = normaliseText(option);
+
+  if (!text.includes(" and ")) {
+    return text;
+  }
+
+  return text
+    .split(" and ")
+    .map((part) => part.trim())
+    .sort()
+    .join(" and ");
+}
+
 function hasDuplicateOptions(options) {
-  const normalisedOptions = options.map(normaliseText);
+  const normalisedOptions = options.map(normaliseOptionForDuplicateCheck);
   return new Set(normalisedOptions).size !== normalisedOptions.length;
+}
+
+function hasKnownPhysicsError(question) {
+  const trustedText = normaliseText([
+    question?.prompt,
+    question?.quizCorrectAnswer,
+    question?.workedSolution,
+    ...(Array.isArray(question?.markScheme)
+      ? question.markScheme.map((point) => point?.point)
+      : [])
+  ].join(" "));
+
+  const forbiddenPatterns = [
+    "force is inversely proportional to mass",
+    "f is inversely proportional to m",
+    "force is directly proportional to acceleration and inversely proportional to mass",
+    "newton's second law states that force is inversely proportional to mass",
+
+    "friction causes an object to decelerate",
+    "friction causes an object to accelerate",
+    "friction causes deceleration",
+    "friction causes acceleration",
+    "friction always causes deceleration",
+    "friction prevents motion",
+    "friction slows down motion",
+
+    "air resistance causes an object to decelerate",
+    "air resistance causes an object to accelerate",
+    "air resistance causes deceleration",
+    "air resistance causes acceleration",
+    "air resistance always causes deceleration",
+
+    "normal contact force causes an object to remain at rest",
+    "normal contact force causes the object to remain at rest",
+    "normal contact force opposes motion",
+
+    "frictional force is zero",
+    "friction must be zero for constant velocity"
+  ];
+
+  return forbiddenPatterns.some((pattern) => trustedText.includes(pattern));
 }
 
 function validateQuestionStructure(question) {
@@ -120,7 +193,7 @@ function validateQuestionStructure(question) {
         errors.push(`quizOptions[${index}] is empty.`);
       }
 
-      if (normaliseText(option).length < 8) {
+      if (normaliseText(option).length < 3) {
         errors.push(`quizOptions[${index}] is too short or vague.`);
       }
     });
@@ -169,11 +242,13 @@ function validateQuestionStructure(question) {
         errors.push(`markScheme[${index}] repeats the prompt instead of giving a specific marking point.`);
       }
 
-      if (normaliseText(point.point).length < 35) {
+      if (normaliseText(point.point).length < 20) {
         errors.push(`markScheme[${index}] is too short to support stable partial marking.`);
       }
     });
-
+    if (hasRepeatedMarkSchemeIdeas(question.markScheme)) {
+      errors.push("markScheme contains repeated or overlapping marking points.");
+    }
     const totalMarkSchemeMarks = sumMarkSchemeMarks(question.markScheme);
 
     if (Number.isInteger(question?.marks) && totalMarkSchemeMarks !== question.marks) {
@@ -200,7 +275,12 @@ function validateQuestionStructure(question) {
   } else if (normaliseText(question.workedSolution).length < 50) {
     errors.push("workedSolution is too short to explain the expected idea.");
   }
-
+  if (hasKnownPhysicsError(question)) {
+    errors.push("Question contains a known physics misconception.");
+  }
+  if (hasCircularReasoning(question)) {
+    errors.push("Question contains circular reasoning.");
+  }
   return {
     isValid: errors.length === 0,
     errors

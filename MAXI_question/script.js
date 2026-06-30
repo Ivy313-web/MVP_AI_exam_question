@@ -21,6 +21,9 @@ const appState = {
   questions: [],
   answers: [],
   score: 0,
+  totalMarksAvailable: 0,
+  isSubmitting: false,
+  errorMessage: "",
   topicTree: {},
   selectedMode: getModeFromURL(),
   attemptId: crypto.randomUUID(),
@@ -45,7 +48,7 @@ const rawTopicTree = {
 
 // QUESTION DATA SOURCE
 async function loadQuestionsFromBackend() {
-  const response = await fetch(`${CONFIG.mockBackendURL}/api/questions`);
+  const response = await fetch(`${CONFIG.mockBackendURL}/api/questions?mix=half&limit=10&mode=${appState.selectedMode}`);
 
   if (!response.ok) {
     throw new Error(`Failed to load questions from backend with status ${response.status}`);
@@ -165,23 +168,55 @@ function renderProgress() {
   `;
 }
 
+function formatGivenValueLabel(key) {
+  const labels = {
+    forceN: "Force / N",
+    massKg: "Mass / kg",
+    accelerationMs2: "Acceleration / m/s²"
+  };
+
+  return labels[key] || key;
+}
+
+function formatQuestionPrompt(question) {
+  if (appState.selectedMode === "quiz") {
+    return question.prompt;
+  }
+
+  const marks = Number.isInteger(question.marks) && question.marks > 0
+    ? question.marks
+    : 1;
+
+  return `${question.prompt}      [${marks}]`;
+}
+
 function renderQuestion() {
   const question = appState.questions[appState.currentQuestionIndex];
-  const canMoveNext = hasCurrentAnswer();
+  const canMoveNext = hasCurrentAnswer() && !appState.isSubmitting;
 
   return `
     <section class="exam-card">
-      <h1 class="prompt">${escapeHTML(question.prompt)}</h1>
+      <h1 class="prompt">${escapeHTML(formatQuestionPrompt(question))}</h1>
+
+      ${appState.errorMessage ? `
+        <div class="error-message">
+          ${escapeHTML(appState.errorMessage)}
+        </div>
+      ` : ""}
+
       <div class="response-area">
         <div class="response-header">
           <span class="mode-indicator">${getModeIndicatorText()}</span>
         </div>
         ${renderResponseInput(question)}
       </div>
+
       <div class="question-actions">
-        <button class="secondary-button" type="button" data-action="skip-question">Skip</button>
+        <button class="secondary-button" type="button" data-action="skip-question"${appState.isSubmitting ? " disabled" : ""}>
+          Skip
+        </button>
         <button class="primary-button" type="button" data-action="submit-answer"${canMoveNext ? "" : " disabled"}>
-          Next
+          ${appState.isSubmitting ? "Checking..." : "Next"}
         </button>
       </div>
     </section>
@@ -195,7 +230,7 @@ function renderResponseInput(question) {
     return `
       <div class="quiz-options" role="radiogroup" aria-label="Quiz options">
         ${question.quizOptions.map((option, index) => `
-          <button class="quiz-option${savedAnswer === option ? " is-selected" : ""}" type="button" data-action="select-quiz" data-answer="${escapeAttribute(option)}" role="radio" aria-checked="${String(savedAnswer === option)}">
+          <button class="quiz-option${savedAnswer === option ? " is-selected" : ""}" type="button" data-action="select-quiz" data-answer="${escapeAttribute(option)}" role="radio" aria-checked="${String(savedAnswer === option)}"${appState.isSubmitting ? " disabled" : ""}>
             <span class="option-letter">${String.fromCharCode(65 + index)}</span>
             <span>${escapeHTML(option)}</span>
           </button>
@@ -205,7 +240,7 @@ function renderResponseInput(question) {
   }
 
   return `
-    <textarea class="short-answer" data-action="short-answer" aria-label="Short answer" placeholder="Type your answer here">${escapeHTML(savedAnswer)}</textarea>
+    <textarea class="short-answer" data-action="short-answer" aria-label="Short answer" placeholder="Type your answer here"${appState.isSubmitting ? " disabled" : ""}>${escapeHTML(savedAnswer)}</textarea>
   `;
 }
 
@@ -214,10 +249,14 @@ function getModeIndicatorText() {
 }
 
 function renderResult() {
+  const scoreText = appState.selectedMode === "short"
+    ? `${appState.score} / ${appState.totalMarksAvailable}`
+    : `${appState.score} / ${appState.questions.length}`;
+
   return `
     <section class="result-card">
       <h1 class="result-title">Result</h1>
-      <p class="result-score">${appState.score} / ${appState.questions.length}</p>
+      <p class="result-score">${scoreText}</p>
       <button class="primary-button" type="button" data-action="check-result">Check your result</button>
     </section>
   `;
@@ -247,7 +286,7 @@ function updateNextButtonState() {
   const nextButton = document.querySelector('[data-action="submit-answer"]');
 
   if (nextButton) {
-    nextButton.disabled = !hasCurrentAnswer();
+    nextButton.disabled = !hasCurrentAnswer() || appState.isSubmitting;
   }
 }
 
@@ -426,9 +465,27 @@ function applyFinalAttemptResults(finalAttempt) {
     };
   });
 
-  appState.score = appState.answers.reduce((total, answer) => {
-    return total + (answer.marksAwarded || 0);
-  }, 0);
+  if (appState.selectedMode === "quiz") {
+    appState.score = appState.answers.reduce((total, answer) => {
+      return total + (answer.isCorrect ? 1 : 0);
+    }, 0);
+
+    appState.totalMarksAvailable = appState.questions.length;
+  } else {
+    const summary = finalAttempt.summary || {};
+
+    appState.score = typeof summary.totalMarksAwarded === "number"
+      ? summary.totalMarksAwarded
+      : appState.answers.reduce((total, answer) => {
+          return total + (answer.marksAwarded || 0);
+        }, 0);
+
+    appState.totalMarksAvailable = typeof summary.totalMarksAvailable === "number"
+      ? summary.totalMarksAvailable
+      : appState.answers.reduce((total, answer) => {
+          return total + (answer.marksAvailable || 0);
+        }, 0);
+  }
 }
 
 async function finalizeAttemptBeforeResult() {
@@ -440,12 +497,16 @@ async function finalizeAttemptBeforeResult() {
 }
 
 async function submitCurrentAnswer() {
-  if (!hasCurrentAnswer()) {
+  if (!hasCurrentAnswer() || appState.isSubmitting) {
     return;
   }
 
   const question = appState.questions[appState.currentQuestionIndex];
   const answer = getCurrentAnswerValue();
+
+  appState.isSubmitting = true;
+  appState.errorMessage = "";
+  renderApp();
 
   try {
     const grading = await submitAnswerToBackend(question, answer);
@@ -464,17 +525,26 @@ async function submitCurrentAnswer() {
       feedback: grading.feedback || ""
     };
 
-    appState.score += grading.marksAwarded || 0;
-
     await moveToNextQuestion();
-    renderApp();
   } catch (error) {
     console.error("Failed to submit answer to backend:", error);
+    appState.errorMessage = "Unable to check this answer. Please make sure the backend is running and try again.";
+  } finally {
+    appState.isSubmitting = false;
+    renderApp();
   }
 }
 
 async function skipCurrentQuestion() {
+  if (appState.isSubmitting) {
+    return;
+  }
+
   const question = appState.questions[appState.currentQuestionIndex];
+
+  appState.isSubmitting = true;
+  appState.errorMessage = "";
+  renderApp();
 
   try {
     const grading = await submitAnswerToBackend(question, "", true);
@@ -494,9 +564,12 @@ async function skipCurrentQuestion() {
     };
 
     await moveToNextQuestion();
-    renderApp();
   } catch (error) {
     console.error("Failed to skip question through backend:", error);
+    appState.errorMessage = "Unable to skip this question. Please make sure the backend is running and try again.";
+  } finally {
+    appState.isSubmitting = false;
+    renderApp();
   }
 }
 
@@ -602,6 +675,8 @@ async function getAIExplanationFromAPI() {}
 async function init() {
   try {
     // test
+    console.log("MAXI Question UI version: v0.6.2-terminal-check-1");
+
     console.log("Attempt ID:", appState.attemptId);
 
     await initializeQuestions();

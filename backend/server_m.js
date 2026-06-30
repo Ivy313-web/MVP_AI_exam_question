@@ -133,7 +133,7 @@ const questionBank = [
   ],
   markScheme: [
   {
-    point: "States that the acceleration has magnitude 9.8 m/s^2 or g.",
+    point: "States the acceleration magnitude as 9.8 m/s^2 or g, including a valid acceleration unit or the symbol g.",
     marks: 1
   },
   {
@@ -310,7 +310,7 @@ marks: 2
 
 //return to main
 function getPublicQuestion(question) {
-  return {
+  const publicQuestion = {
     id: question.id,
     questionType: question.questionType || "concept",
     formulaType: question.formulaType || null,
@@ -319,14 +319,52 @@ function getPublicQuestion(question) {
     quizOptions: question.quizOptions,
     marks: question.marks
   };
+
+  if (question.questionType === "calculation") {
+    publicQuestion.givenValues = question.givenValues || null;
+    publicQuestion.unknown = question.unknown || null;
+  }
+
+  return publicQuestion;
 }
 
 // get question method
 app.get("/api/questions", (req, res) => {
-  const publicQuestions = getAllQuestions().map(getPublicQuestion);
+  const requestedLimit = Number(req.query.limit);
+  const limit = Number.isInteger(requestedLimit) && requestedLimit > 0
+    ? requestedLimit
+    : 10;
+
+  const mix = req.query.mix || "random";
+  const mode = req.query.mode || "short";
+
+  const allQuestions = getAllQuestions();
+  const modeFilteredQuestions = filterQuestionsForMode(allQuestions, mode);
+
+  let selectedQuestions;
+
+  if (mix === "half") {
+    selectedQuestions = selectHalfConceptHalfCalculationQuestions(modeFilteredQuestions, {
+      limit
+    });
+  } else {
+    selectedQuestions = selectPracticeQuestions(modeFilteredQuestions, {
+      limit
+    });
+  }
+
+  const publicQuestions = selectedQuestions.map(getPublicQuestion);
 
   res.json({
-    questions: publicQuestions
+    questions: publicQuestions,
+    totalAvailable: allQuestions.length,
+    filteredAvailable: modeFilteredQuestions.length,
+    selectedCount: publicQuestions.length,
+    selection: {
+      strategy: mix === "half" ? "half_concept_half_calculation" : "random",
+      mode,
+      limit
+    }
   });
 });
 
@@ -425,6 +463,45 @@ function getAllQuestions() {
   ];
 }
 
+function shuffleQuestions(questions) {
+  const copiedQuestions = [...questions];
+
+  for (let index = copiedQuestions.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+    const temporaryQuestion = copiedQuestions[index];
+
+    copiedQuestions[index] = copiedQuestions[randomIndex];
+    copiedQuestions[randomIndex] = temporaryQuestion;
+  }
+
+  return copiedQuestions;
+}
+
+function getQuestionsByType(questions, questionType) {
+  return questions.filter((question) => {
+    const resolvedType = question.questionType || "concept";
+    return resolvedType === questionType;
+  });
+}
+
+function selectPracticeQuestions(questions, options = {}) {
+  const limit = Number.isInteger(options.limit) && options.limit > 0
+    ? options.limit
+    : 10;
+
+  return shuffleQuestions(questions).slice(0, limit);
+}
+
+function filterQuestionsForMode(questions, mode) {
+  if (mode === "quiz") {
+    return questions.filter((question) => {
+      return (question.marks || 1) === 1;
+    });
+  }
+
+  return questions;
+}
+
 // ---------------------------------------------------------------------------------------
 // standardize the question
 function normaliseAnswer(answer) {
@@ -443,7 +520,15 @@ function getFinalStatus(isSkipped, marksAwarded, marksAvailable) {
     return "skipped";
   }
 
-  return marksAwarded >= marksAvailable / 2 ? "correct" : "incorrect";
+  if (marksAwarded >= marksAvailable) {
+    return "correct";
+  }
+
+  if (marksAwarded > 0) {
+    return "partial";
+  }
+
+  return "incorrect";
 }
 
 const aiGradingSchema = {
@@ -492,26 +577,60 @@ async function gradePendingAnswersWithMockAI(pendingAIAnswers) {
   return pendingAIAnswers.map((pendingAnswer) => {
     const question = findQuestionById(pendingAnswer.questionId);
     const marksAvailable = pendingAnswer.marksAvailable || question?.marks || 1;
-
     const marksAwarded = 0;
     const status = getFinalStatus(false, marksAwarded, marksAvailable);
 
     return {
       questionId: pendingAnswer.questionId,
-      questionType: pendingAnswer.questionType,
-      userAnswer: pendingAnswer.userAnswer,
+      questionType: pendingAnswer.questionType || "short",
+      userAnswer: pendingAnswer.userAnswer || "",
       isSkipped: false,
-      prompt: pendingAnswer.prompt,
-      correctAnswer: pendingAnswer.correctAnswer,
+      prompt: pendingAnswer.prompt || question?.prompt || "",
+      correctAnswer: pendingAnswer.correctAnswer || question?.quizCorrectAnswer || "",
       status,
-      isCorrect: status === "correct",
+      isCorrect: false,
       marksAwarded,
       marksAvailable,
-      percentage: Math.round((marksAwarded / marksAvailable) * 100),
-      feedback: "Mock AI checked this answer. This will be replaced by real AI grading later.",
+      percentage: 0,
+      feedback: "AI marking was unavailable, so this answer was safely marked as 0 for now.",
       markBreakdown: []
     };
   });
+}
+
+function selectHalfConceptHalfCalculationQuestions(questions, options = {}) {
+  const limit = Number.isInteger(options.limit) && options.limit > 0
+    ? options.limit
+    : 10;
+
+  const conceptTargetCount = Math.ceil(limit / 2);
+  const calculationTargetCount = Math.floor(limit / 2);
+
+  const conceptQuestions = shuffleQuestions(getQuestionsByType(questions, "concept"));
+  const calculationQuestions = shuffleQuestions(getQuestionsByType(questions, "calculation"));
+
+  const selectedConceptQuestions = conceptQuestions.slice(0, conceptTargetCount);
+  const selectedCalculationQuestions = calculationQuestions.slice(0, calculationTargetCount);
+
+  let selectedQuestions = [
+    ...selectedConceptQuestions,
+    ...selectedCalculationQuestions
+  ];
+
+  if (selectedQuestions.length < limit) {
+    const selectedIds = new Set(selectedQuestions.map((question) => question.id));
+
+    const remainingQuestions = shuffleQuestions(questions).filter((question) => {
+      return !selectedIds.has(question.id);
+    });
+
+    selectedQuestions = [
+      ...selectedQuestions,
+      ...remainingQuestions.slice(0, limit - selectedQuestions.length)
+    ];
+  }
+
+  return shuffleQuestions(selectedQuestions).slice(0, limit);
 }
 
 //AI marking-----------------------------------------------------------------------------
@@ -545,6 +664,7 @@ Your only job is to mark student answers.
 You are not a tutor.
 You are not a chatbot.
 Follow the mark scheme and marking rules exactly.
+Do not award information ONLY present in the question prompt.
 
 OUTPUT FORMAT:
 Return only one valid JSON object.
@@ -612,16 +732,28 @@ CALCULATION QUESTION MARKING RULES:
 - Do not use exact string matching for units, but do not guess unclear units.
 - Accept only clearly recognisable equivalent units.
 
-Unit equivalence:
+Unit and magnitude equivalence:
 - Force: accept "N", "n", "newton", "newtons".
 - Mass: accept "kg", "kilogram", "kilograms".
 - Acceleration: accept "m/s²", "m/s^2", "m s-2", "m s^-2", "metres per second squared", "meters per second squared".
 - Minor capitalization and spacing differences are acceptable.
 - Random, unclear, or heavily misspelled unit-like words are not acceptable.
 - Example: "20 newton" is equivalent to "20 N", but "20 nastwn" is not.
+- If a markScheme point requires a physical magnitude with a unit, the student must include a correct unit or a recognised symbol such as g.
+- Do not award a magnitude mark for a bare number unless the markScheme explicitly allows a bare number.
+- For acceleration near Earth's surface, "9.8 m/s^2", "9.8 m/s²", "9.8 metres per second squared", or "g" may earn the magnitude mark.
+- The answer "9.8 downward" gives the direction idea but does not give a valid acceleration unit, so it should not earn the magnitude mark.
+- If the student gives the number 9.8 but omits the unit or g, the feedback/reason must say that the unit or g is missing, not that the magnitude is missing.
+- Distinguish between a missing numerical value and a missing unit.
+- If the student writes "9.8" without a unit or g, do not award the acceleration magnitude mark.
 
 For 2-mark calculation questions:
 - Award the working mark if the student shows a valid formula, rearrangement, substitution, or calculation method.
+- Do not award the working mark just because the student gives a final answer.
+- Do not infer that the student used the correct formula unless the formula, substitution, rearrangement, or calculation method is clearly shown in the student's answer.
+- If the student only gives an incorrect final answer, award 0 marks.
+- If the student only gives a final answer that has the correct unit but the numerical value is wrong, award 0 marks unless valid working is clearly shown.
+- For example, if the expected answer is "20 N" and the student only writes "10 N", award 0 marks. Do not say they used F = ma.
 - Award the final-answer mark only if the numerical value is correct and the unit is clearly equivalent to the expected unit.
 - If the final value and unit are correct but no working is shown, award only the final-answer mark.
 - If working is correct but the final value or unit is wrong, award only the working mark.

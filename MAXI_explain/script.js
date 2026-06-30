@@ -81,8 +81,11 @@ function loadResultsFromV1Source() {
 }
 
 function convertV1SnapshotToExplainResult(snapshotItem) {
-  const status = formatStatusForExplainPage(snapshotItem.status);
   const questionType = snapshotItem.questionType;
+  const marksAwarded = getSafeMarksAwarded(snapshotItem);
+  const marksAvailable = getSafeMarksAvailable(snapshotItem);
+  const status = formatStatusForExplainPage(snapshotItem.status, marksAwarded, marksAvailable);
+
   const result = {
     id: snapshotItem.questionId,
     questionNumber: snapshotItem.questionNumber,
@@ -91,7 +94,7 @@ function convertV1SnapshotToExplainResult(snapshotItem) {
     generatedParams: Object.freeze({}),
     userAnswer: snapshotItem.userAnswer,
     correctAnswer: snapshotItem.correctAnswer,
-    isCorrect: snapshotItem.status === "correct",
+    isCorrect: status === "Correct",
     status: status,
     topic: "Projectile Motion",
     subject: "Physics",
@@ -99,11 +102,11 @@ function convertV1SnapshotToExplainResult(snapshotItem) {
   };
 
   if (questionType === "short") {
-  result.marksAwarded = getSafeMarksAwarded(snapshotItem);
-  result.marksAvailable = getSafeMarksAvailable(snapshotItem);
-  result.markBreakdown = Array.isArray(snapshotItem.markBreakdown)
-    ? snapshotItem.markBreakdown
-    : [];
+    result.marksAwarded = marksAwarded;
+    result.marksAvailable = marksAvailable;
+    result.markBreakdown = Array.isArray(snapshotItem.markBreakdown)
+      ? snapshotItem.markBreakdown
+      : [];
   }
 
   return Object.freeze(result);
@@ -121,17 +124,37 @@ function getSafeMarksAvailable(snapshotItem) {
     : "";
 }
 
-function formatStatusForExplainPage(status) {
+function formatStatusForExplainPage(status, marksAwarded, marksAvailable) {
+  if (status === "skipped") {
+    return "Skipped";
+  }
+
+  if (
+    typeof marksAwarded === "number" &&
+    typeof marksAvailable === "number" &&
+    marksAvailable > 0
+  ) {
+    if (marksAwarded === marksAvailable) {
+      return "Correct";
+    }
+
+    if (marksAwarded > 0 && marksAwarded < marksAvailable) {
+      return "Partly correct";
+    }
+
+    return "Incorrect";
+  }
+
   if (status === "correct") {
     return "Correct";
   }
 
-  if (status === "incorrect") {
-    return "Incorrect";
+  if (status === "partial") {
+    return "Partly correct";
   }
 
-  if (status === "skipped") {
-    return "Skipped";
+  if (status === "incorrect") {
+    return "Incorrect";
   }
 
   return "Skipped";
@@ -189,8 +212,28 @@ function renderExplainPage(results) {
   `;
 }
 
+function getStatusClass(status) {
+  if (status === "Correct") {
+    return "correct";
+  }
+
+  if (status === "Partly correct") {
+    return "partial";
+  }
+
+  if (status === "Incorrect") {
+    return "incorrect";
+  }
+
+  if (status === "Skipped") {
+    return "skipped";
+  }
+
+  return "unknown";
+}
+
 function renderReviewCard(result) {
-  const statusClass = result.status.toLowerCase();
+  const statusClass = getStatusClass(result.status);
   const displayedUserAnswer = result.status === "Skipped" ? "Skipped" : result.userAnswer;
 
   return `
