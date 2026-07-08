@@ -11,7 +11,7 @@ const express = require("express");
 const cors = require("cors");
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 const groq = new Groq({
   apiKey: process.env.GROQ_API_KEY
@@ -1203,5 +1203,5 @@ attempt.pendingAIAnswers = [];
 });
 
 app.listen(PORT, () => {
-  console.log(`MAXI mock backend running at http://localhost:${PORT}`);
+  console.log(`MAXI backend running on port ${PORT}`);
 });
