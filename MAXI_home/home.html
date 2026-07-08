@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MAXI Home</title>
+  <link rel="stylesheet" href="home.css">
+</head>
+<body>
+  <div class="home-shell">
+    <header class="top-header" aria-label="MAXI home header">
+      <div class="brand" aria-label="MAXI">
+        <span class="brand-initial">M</span><span>AXI</span>
+      </div>
+
+      <div class="header-right" aria-label="Home placeholders">
+        <button class="guest-display placeholder-action" type="button" aria-label="Guest user">
+          <span class="guest-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" focusable="false">
+              <circle cx="12" cy="8" r="4"></circle>
+              <path d="M5 20c1.4-4 4-6 7-6s5.6 2 7 6"></path>
+            </svg>
+          </span>
+          <span>Guest</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="home-main">
+      <section class="practice-controls" aria-label="Practice controls">
+        <button
+          id="startPracticeButton"
+          class="primary-button"
+          type="button"
+        >
+          Start Mini Practice
+        </button>
+
+        <div class="practice-bar">
+          <label class="select-field">
+            <span>Subject</span>
+            <select id="subjectSelect" aria-label="Subject"></select>
+          </label>
+
+          <label class="select-field">
+            <span>Level</span>
+            <select id="levelSelect" aria-label="Level"></select>
+          </label>
+
+          <label class="select-field topic-field">
+            <span>Topic</span>
+            <select id="topicSelect" aria-label="Topic"></select>
+          </label>
+        </div>
+      </section>
+
+      <section class="workspace-grid" aria-label="Home workspace">
+        <aside class="overview-panel card" aria-labelledby="overview-title">
+          <h1 id="overview-title">Practice Tools</h1>
+          <div class="module-list" aria-label="Future practice module placeholders">
+            <button class="module-placeholder placeholder-action" type="button">
+              <span class="module-copy">
+                <span class="module-title">Tool name</span>
+                <span class="module-description">Short description</span>
+              </span>
+              <span class="module-image-slot" aria-hidden="true"></span>
+            </button>
+
+            <button class="module-placeholder placeholder-action" type="button">
+              <span class="module-copy">
+                <span class="module-title">Tool name</span>
+                <span class="module-description">Short description</span>
+              </span>
+              <span class="module-image-slot" aria-hidden="true"></span>
+            </button>
+          </div>
+        </aside>
+
+        <section class="assistant-panel card" aria-labelledby="assistant-title">
+          <h2 id="assistant-title">MAXI Assistant</h2>
+
+          <div class="chat-shell" aria-label="Assistant chat placeholder">
+            <div class="message-area" aria-label="Empty conversation area"></div>
+
+            <div class="chat-input-row">
+              <label class="chat-input-label">
+                <span class="visually-hidden">Assistant input placeholder</span>
+                <textarea aria-label="Assistant input placeholder"></textarea>
+              </label>
+              <button class="send-button placeholder-action" type="button" aria-label="Send placeholder">
+                <span aria-hidden="true">&rarr;</span>
+              </button>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <p class="toast-message" role="status" aria-live="polite" data-toast hidden>
+      Placeholder only.
+    </p>
+  </div>
+
+  <script src="home.js"></script>
+</body>
+</html>

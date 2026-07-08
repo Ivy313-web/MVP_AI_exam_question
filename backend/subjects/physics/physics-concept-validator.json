@@ -1,0 +1,88 @@
+[
+  {
+    "forces and newton's laws": {
+      "forbiddenPatterns": [
+          "force is inversely proportional to mass",
+          "f is inversely proportional to m",
+          "force is directly proportional to acceleration and inversely proportional to mass",
+          "newton's second law states that force is inversely proportional to mass",
+          "friction causes an object to decelerate",
+          "friction causes an object to accelerate",
+          "friction causes deceleration",
+          "friction causes acceleration",
+          "friction always causes deceleration",
+          "friction prevents motion",
+          "friction slows down motion",
+          "air resistance causes an object to decelerate",
+          "air resistance causes an object to accelerate",
+          "air resistance causes deceleration",
+          "air resistance causes acceleration",
+          "air resistance always causes deceleration",
+          "normal contact force causes an object to remain at rest",
+          "normal contact force causes the object to remain at rest",
+          "normal contact force opposes motion",
+          "frictional force is zero",
+          "friction must be zero for constant velocity",
+          "normal contact force opposes the weight",
+          "normal contact force supports the weight",
+          "supporting the object's weight"
+        ],
+        "promptConditionPatterns": [
+          [
+            "mass is constant",
+            "constant mass"
+          ],
+          [
+            "velocity is constant",
+            "constant velocity"
+          ],
+          [
+            "object is at rest",
+            "at rest"
+          ],
+          [
+            "horizontal surface",
+            "surface is horizontal"
+          ],
+          [
+            "rough surface",
+            "surface is rough"
+          ]
+        ],
+        "circularReasoningPatterns": [
+          "because the net force acting on it is zero",
+          "because the net force acting on it is non-zero",
+          "because the resultant force is zero",
+          "because the resultant force is non-zero",
+          "because the force is exerted perpendicular to the surface"
+        ]
+    }
+  },
+  {
+    "projectile motion": {
+      "forbiddenPatterns": [
+          "the total velocity is zero at the highest point",
+          "resultant velocity is zero at the highest point",
+          "gravity acts horizontally",
+          "horizontal acceleration is 9.8",
+          "horizontal acceleration is 9.8 m/s²",
+          "acceleration is zero at the highest point",
+          "the projectile has no acceleration at the highest point",
+          "horizontal velocity decreases when air resistance is ignored",
+          "horizontal velocity increases when air resistance is ignored",
+          "gravity changes during flight",
+          "the projectile has no weight"
+        ],
+        "promptConditionPatterns": [
+          "when air resistance is ignored",
+          "at the highest point",
+          "launch and landing at the same height"
+        ],
+        "circularReasoningPatterns": [
+          "the horizontal velocity remains constant because the horizontal velocity does not change",
+          "the vertical velocity is zero because the projectile is at the highest point",
+          "the path is parabolic because it follows a parabola"
+        ]
+    }
+  }
+]

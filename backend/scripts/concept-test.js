@@ -27,6 +27,11 @@ const CONFIG = {
     "../subjects/physics/physics-concept-prompt.json"
   ),
 
+  validatorFile: path.join(
+    __dirname,
+    "../subjects/physics/physics-concept-validator.json"
+  ),
+
   numberOfQuestionsWanted: 5,
   numberOfBlueprintsToGenerate: 10,
 
@@ -123,12 +128,77 @@ function findTopicPromptConfig(
   );
 }
 
+function findTopicValidatorRules(
+  validatorEntries,
+  requestedTopicName
+) {
+  if (!Array.isArray(validatorEntries)) {
+    throw new Error(
+      "Concept validator configuration must be an array."
+    );
+  }
+
+  const normalisedRequestedTopic =
+    normaliseText(requestedTopicName);
+
+  for (const topicEntry of validatorEntries) {
+    if (
+      !topicEntry ||
+      typeof topicEntry !== "object" ||
+      Array.isArray(topicEntry)
+    ) {
+      continue;
+    }
+
+    const matchingEntry =
+      Object.entries(topicEntry).find(
+        ([storedTopicName]) => {
+          return (
+            normaliseText(storedTopicName) ===
+            normalisedRequestedTopic
+          );
+        }
+      );
+
+    if (!matchingEntry) {
+      continue;
+    }
+
+    const [, validatorRules] = matchingEntry;
+
+    if (
+      !validatorRules ||
+      typeof validatorRules !== "object" ||
+      Array.isArray(validatorRules)
+    ) {
+      throw new Error(
+        `Invalid concept validator configuration for topic: ${requestedTopicName}`
+      );
+    }
+
+    return validatorRules;
+  }
+
+  throw new Error(
+    `No concept validator configuration found for topic: ${requestedTopicName}`
+  );
+}
+
 const conceptPromptEntries =
   loadJsonFile(CONFIG.promptFile);
+
+const conceptValidatorEntries =
+  loadJsonFile(CONFIG.validatorFile);
 
 const topicPromptConfig =
   findTopicPromptConfig(
     conceptPromptEntries,
+    CONFIG.topic
+  );
+
+const topicValidatorRules =
+  findTopicValidatorRules(
+    conceptValidatorEntries,
     CONFIG.topic
   );
 
@@ -470,25 +540,6 @@ function questionContainsKnownPhysicsError(
   );
 }
 
-function markPointRepeatsPromptCondition(
-  prompt,
-  pointText,
-  conditionPatterns = []
-) {
-  const promptText = normaliseText(prompt);
-  const point = normaliseText(pointText);
-
-  return conditionPatterns.some((pattern) => {
-    const normalisedPattern =
-      normaliseText(pattern);
-
-    return (
-      promptText.includes(normalisedPattern) &&
-      point.includes(normalisedPattern)
-    );
-  });
-}
-
 function lightlyCheckFinalQuestion(
   question,
   validatorRules = {}
@@ -573,54 +624,6 @@ function lightlyCheckFinalQuestion(
   };
 }
 
-function validateFinalQuestionExtra(
-  question,
-  validatorRules = {}
-) {
-  const errors = [];
-
-  if (
-    Array.isArray(question?.quizOptions) &&
-    hasDuplicateOptions(question.quizOptions)
-  ) {
-    errors.push(
-      "quizOptions contain duplicate or reversed duplicate options."
-    );
-  }
-
-  if (
-    questionContainsKnownPhysicsError(
-      question,
-      validatorRules
-    )
-  ) {
-    errors.push(
-      "Question contains a known physics misconception."
-    );
-  }
-
-  if (Array.isArray(question?.markScheme)) {
-    question.markScheme.forEach((point, index) => {
-      if (
-        markPointRepeatsPromptCondition(
-          question.prompt,
-          point.point,
-          validatorRules.promptConditionPatterns || []
-        )
-      ) {
-        errors.push(
-          `markScheme[${index}] repeats a condition already given in the prompt.`
-        );
-      }
-    });
-  }
-
-  return {
-    isValid: errors.length === 0,
-    errors
-  };
-}
-
 function validateFinalQuestion(
   question,
   validatorRules = {}
@@ -633,28 +636,10 @@ function validateFinalQuestion(
       "temporary_validation_id"
   };
 
-  const structureValidation =
-    validateQuestionStructure(
-      questionForValidation,
-      validatorRules
-    );
-
-  const extraValidation =
-    validateFinalQuestionExtra(
-      questionForValidation,
-      validatorRules
-    );
-
-  return {
-    isValid:
-      structureValidation.isValid &&
-      extraValidation.isValid,
-
-    errors: [
-      ...structureValidation.errors,
-      ...extraValidation.errors
-    ]
-  };
+  return validateQuestionStructure(
+    questionForValidation,
+    validatorRules
+  );
 }
 
 function countQuestionsByMarks(questions) {
@@ -939,7 +924,7 @@ async function runPipeline() {
     return {
       question,
       lightCheck:
-  lightlyCheckFinalQuestion(question, topicPromptConfig.validatorRules || {})
+  lightlyCheckFinalQuestion(question, topicValidatorRules)
     };
   });
 
@@ -948,7 +933,7 @@ async function runPipeline() {
       question: item.question,
       lightCheck: item.lightCheck,
       strictValidation:
-  validateFinalQuestion(item.question, topicPromptConfig.validatorRules || {})
+  validateFinalQuestion(item.question, topicValidatorRules)
     };
   });
 

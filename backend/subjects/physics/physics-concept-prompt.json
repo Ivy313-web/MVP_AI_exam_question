@@ -1,0 +1,54 @@
+[
+  {
+    "forces and newton's laws": {
+      "blueprintPromptRules": [
+        "Zero resultant force means rest or constant velocity.",
+        "Constant velocity means zero acceleration and zero resultant force.",
+        "Resultant force causes acceleration in its direction.",
+        "For force to be directly proportional to acceleration, mass must be constant.",
+        "Do not say force is inversely proportional to mass.",
+        "Friction acts between surfaces in contact and opposes relative motion or the tendency of relative motion.",
+        "Do not say friction always causes deceleration.",
+        "Air resistance is drag that opposes motion through air.",
+        "Do not say air resistance always causes deceleration.",
+        "Normal contact force acts perpendicular to the surface.",
+        "Do not say normal contact force causes an object to remain at rest."
+      ],
+      "assessmentPromptRules": [
+        "Use F = ma correctly.",
+        "If explaining how mass affects acceleration, state that for the same resultant force, a larger mass gives a smaller acceleration.",
+        "Do not say friction always causes deceleration.",
+        "For friction questions, say that friction opposes relative motion or the tendency of relative motion.",
+        "Do not say air resistance always causes deceleration.",
+        "Do not say friction is zero just because velocity is constant.",
+        "Normal contact force acts perpendicular to the surface.",
+        "Describe gravity or weight as acting vertically downwards.",
+        "Do not say normal contact force supports weight unless the object is at rest on a horizontal surface."
+      ]
+    }
+  },
+  {
+    "projectile motion": {
+      "blueprintPromptRules": [
+        "Treat horizontal and vertical motion independently.",
+        "When air resistance is ignored, horizontal acceleration is zero.",
+        "When air resistance is ignored, horizontal velocity remains constant.",
+        "Vertical acceleration is constant and directed vertically downwards.",
+        "At the highest point, vertical velocity is zero but horizontal velocity is not zero.",
+        "Do not say total velocity is zero at the highest point.",
+        "Do not say gravity acts horizontally.",
+        "Do not say acceleration is zero at the highest point.",
+        "The only force acting on an ideal projectile after launch is its weight."
+      ],
+      "assessmentPromptRules": [
+        "Keep horizontal and vertical velocity components clearly distinguished.",
+        "Do not treat zero vertical velocity at the highest point as zero resultant velocity.",
+        "State that gravity acts vertically downwards.",
+        "Do not say horizontal velocity changes when air resistance is ignored.",
+        "Do not say the projectile has zero acceleration at the highest point.",
+        "Do not treat a condition already supplied in the prompt as an earned mark.",
+        "For multi-mark explanations, require separate physical ideas."
+      ]
+    }
+  }
+]

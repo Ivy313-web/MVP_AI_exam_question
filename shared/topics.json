@@ -1,0 +1,38 @@
+{
+  "subjects": [
+    {
+      "id": "physics",
+      "name": "Physics",
+      "levels": [
+        {
+          "id": "gcse",
+          "name": "GCSE",
+          "topics": [
+            {
+              "id": "forces-newtons-laws",
+              "name": "Forces and Newton's Laws"
+            },
+            {
+              "id": "projectile-motion",
+              "name": "Projectile Motion"
+            }
+          ]
+        },
+        {
+          "id": "a-level",
+          "name": "A-level",
+          "topics": [
+            {
+              "id": "forces-newtons-laws",
+              "name": "Forces and Newton's Laws"
+            },
+            {
+              "id": "projectile-motion",
+              "name": "Projectile Motion"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -304,23 +304,7 @@ function renderMarkBreakdown(result) {
   `;
 }
 
-//google form
-// function renderFinalActionPage() {
-//   return `
-//     <section class="final-card">
-//       <div>
-//         <h1 class="final-title">Review completed</h1>
-//         <p class="final-copy">
-//           You have finished reviewing your answers. Click "Finish" to give feedback on this MVP.
-//         </p>
-//       </div>
-//       <div class="final-actions">
-//         <button class="secondary-button final-action-button try-again-button" type="button" data-action="try-again">Try again</button>
-//         <button class="primary-button final-action-button" type="button" data-action="finish">Finish</button>
-//       </div>
-//     </section>
-//   `;
-// }
+
 function renderFinalActionPage() {
   return `
     <section class="final-card">
@@ -382,13 +366,9 @@ function handleTryAgain() {
   goToQuestionPage();
 }
 
-//google form
-// function handleFinish() {
-//   clearSavedResultSnapshot();
-//   window.location.href = "https://docs.google.com/forms/d/e/1FAIpQLSffiKG4zwrWRUN21fPT3O7xyWFL55ZUvTFtmY4fAMVKhydynA/viewform";
-// }
 function handleFinish() {
   clearSavedResultSnapshot();
+  window.location.href = "../MAXI_home/home.html";
 }
 // INIT
 function initializeApp() {

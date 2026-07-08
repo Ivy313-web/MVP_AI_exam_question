@@ -1,0 +1,40 @@
+[
+  {
+    "forces and newton's laws": {
+      "F_MA": {
+        "questionType": "calculation",
+        "formulaType": "F_MA",
+        "allowedUnknowns": [
+          "forceN",
+          "accelerationMs2",
+          "massKg"
+        ],
+        "requiredGivenValueKeys": [
+          "forceN",
+          "accelerationMs2",
+          "massKg"
+        ],
+        "quizOptionCount": 4,
+        "minimumMarks": 1,
+        "maximumMarks": 4,
+        "markPointMarks": 1,
+        "answerTolerance": 0.01,
+        "answerUnits": {
+          "forceN": "N",
+          "accelerationMs2": "m/s²",
+          "massKg": "kg"
+        },
+        "minimumUnknownMix": {
+          "forceN": 1,
+          "accelerationMs2": 1,
+          "massKg": 1
+        },
+        "targetUnknownMix": {
+          "forceN": 2,
+          "accelerationMs2": 2,
+          "massKg": 1
+        }
+      }
+    }
+  }
+]

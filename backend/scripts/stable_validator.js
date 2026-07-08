@@ -113,44 +113,6 @@ function hasDuplicateOptions(options) {
   return new Set(normalisedOptions).size !== normalisedOptions.length;
 }
 
-function markPointRepeatsPromptCondition(
-  prompt,
-  pointText,
-  conditionPatterns = []
-) {
-  const promptText = normaliseText(prompt);
-  const point = normaliseText(pointText);
-
-  return conditionPatterns.some((patternEntry) => {
-    const patterns = Array.isArray(patternEntry)
-      ? patternEntry
-      : [patternEntry];
-
-    const normalisedPatterns = patterns
-      .map((pattern) => normaliseText(pattern))
-      .filter(Boolean);
-
-    if (normalisedPatterns.length === 0) {
-      return false;
-    }
-
-    const promptContainsCondition =
-      normalisedPatterns.some((pattern) => {
-        return promptText.includes(pattern);
-      });
-
-    const pointContainsCondition =
-      normalisedPatterns.some((pattern) => {
-        return point.includes(pattern);
-      });
-
-    return (
-      promptContainsCondition &&
-      pointContainsCondition
-    );
-  });
-}
-
 function hasKnownPhysicsError(
   question,
   forbiddenPatterns = []
@@ -203,9 +165,9 @@ function validateQuestionStructure(
     errors.push("Missing prompt.");
   }
 
-  if (
-  !Array.isArray(question.quizOptions) || question.quizOptions.length !== quizOptionCount) {errors.push(`quizOptions must contain exactly ${quizOptionCount} options.`);}
-  else {
+  if (!Array.isArray(question?.quizOptions) || question.quizOptions.length !== 4) {
+    errors.push("quizOptions must contain exactly 4 options.");
+  } else {
     if (hasDuplicateOptions(question.quizOptions)) {
       errors.push("quizOptions must not contain duplicate or near-duplicate options.");
     }
@@ -262,17 +224,6 @@ function validateQuestionStructure(
 
       if (isPromptRepeatedAsMarkPoint(question.prompt, point.point)) {
         errors.push(`markScheme[${index}] repeats the prompt instead of giving a specific marking point.`);
-      }
-      if (
-        markPointRepeatsPromptCondition(
-          question.prompt,
-          point.point,
-          validatorRules.promptConditionPatterns || []
-        )
-      ) {
-        errors.push(
-          `markScheme[${index}] repeats a condition already given in the prompt.`
-        );
       }
 
       if (normaliseText(point.point).length < 20) {

@@ -1,0 +1,767 @@
+[{"forces and newton's laws":[
+  {
+    "id": "gen_calc_q1",
+    "questionType": "calculation",
+    "formulaType": "F_MA",
+    "topic": {
+      "level1": "Forces and Motion",
+      "level2": "Physics",
+      "level3": "Forces and Newton's Laws"
+    },
+    "prompt": "A 2 kg object accelerates at 3 m/s². Calculate the resultant force acting on the object.",
+    "givenValues": {
+      "massKg": 2,
+      "accelerationMs2": 3,
+      "forceN": null
+    },
+    "unknown": "forceN",
+    "quizOptions": [
+      "6 N",
+      "1.5 N",
+      "5 N",
+      "9 N"
+    ],
+    "quizCorrectAnswer": "6 N",
+    "answer": {
+      "value": 6,
+      "unit": "N"
+    },
+    "shortAcceptedAnswers": [],
+    "markScheme": [
+      {
+        "point": "Uses F = ma.",
+        "marks": 1
+      },
+      {
+        "point": "Substitutes the values correctly and gives the correct answer with unit.",
+        "marks": 1
+      }
+    ],
+    "marks": 2,
+    "workedSolution": "Use F = ma. F = 2 × 3 = 6 N."
+  },
+  {
+    "id": "gen_calc_q2",
+    "questionType": "calculation",
+    "formulaType": "F_MA",
+    "topic": {
+      "level1": "Forces and Motion",
+      "level2": "Physics",
+      "level3": "Forces and Newton's Laws"
+    },
+    "prompt": "A 15 N force acts on a 3 kg box. Calculate the acceleration of the box.",
+    "givenValues": {
+      "massKg": 3,
+      "accelerationMs2": null,
+      "forceN": 15
+    },
+    "unknown": "accelerationMs2",
+    "quizOptions": [
+      "0.5 m/s²",
+      "2 m/s²",
+      "5 m/s²",
+      "10 m/s²"
+    ],
+    "quizCorrectAnswer": "5 m/s²",
+    "answer": {
+      "value": 5,
+      "unit": "m/s²"
+    },
+    "shortAcceptedAnswers": [],
+    "markScheme": [
+      {
+        "point": "Uses F = ma.",
+        "marks": 1
+      },
+      {
+        "point": "Substitutes the values correctly and gives the correct answer with unit.",
+        "marks": 1
+      }
+    ],
+    "marks": 2,
+    "workedSolution": "Use F = ma. a = 15 ÷ 3 = 5 m/s²."
+  },
+  {
+    "id": "gen_calc_q3",
+    "questionType": "calculation",
+    "formulaType": "F_MA",
+    "topic": {
+      "level1": "Forces and Motion",
+      "level2": "Physics",
+      "level3": "Forces and Newton's Laws"
+    },
+    "prompt": "A 5 kg model car is acted upon by a force of 10 N. Calculate the acceleration of the model car.",
+    "givenValues": {
+      "massKg": 5,
+      "accelerationMs2": null,
+      "forceN": 10
+    },
+    "unknown": "accelerationMs2",
+    "quizOptions": [
+      "2 m/s²",
+      "1 m/s²",
+      "0.5 m/s²",
+      "0.1 m/s²"
+    ],
+    "quizCorrectAnswer": "2 m/s²",
+    "answer": {
+      "value": 2,
+      "unit": "m/s²"
+    },
+    "shortAcceptedAnswers": [],
+    "markScheme": [
+      {
+        "point": "Uses F = ma.",
+        "marks": 1
+      },
+      {
+        "point": "Substitutes the values correctly and gives the correct answer with unit.",
+        "marks": 1
+      }
+    ],
+    "marks": 2,
+    "workedSolution": "Use F = ma. a = 10 ÷ 5 = 2 m/s²."
+  },
+  {
+    "id": "gen_calc_q4",
+    "questionType": "calculation",
+    "formulaType": "F_MA",
+    "topic": {
+      "level1": "Forces and Motion",
+      "level2": "Physics",
+      "level3": "Forces and Newton's Laws"
+    },
+    "prompt": "A resultant force of 25 N causes an acceleration of 4 m/s². Calculate the mass of the object.",
+    "givenValues": {
+      "massKg": null,
+      "accelerationMs2": 4,
+      "forceN": 25
+    },
+    "unknown": "massKg",
+    "quizOptions": [
+      "6.25 kg",
+      "12.5 kg",
+      "18.75 kg",
+      "25 kg"
+    ],
+    "quizCorrectAnswer": "6.25 kg",
+    "answer": {
+      "value": 6.25,
+      "unit": "kg"
+    },
+    "shortAcceptedAnswers": [],
+    "markScheme": [
+      {
+        "point": "Uses F = ma.",
+        "marks": 1
+      },
+      {
+        "point": "Substitutes the values correctly and gives the correct answer with unit.",
+        "marks": 1
+      }
+    ],
+    "marks": 2,
+    "workedSolution": "Use F = ma. m = 25 ÷ 4 = 6.25 kg."
+  },
+  {
+    "id": "gen_calc_q5",
+    "questionType": "calculation",
+    "formulaType": "F_MA",
+    "topic": {
+      "level1": "Forces and Motion",
+      "level2": "Physics",
+      "level3": "Forces and Newton's Laws"
+    },
+    "prompt": "A resultant force of 30 N causes an acceleration of 5 m/s². Calculate the mass of the object.",
+    "givenValues": {
+      "massKg": null,
+      "accelerationMs2": 5,
+      "forceN": 30
+    },
+    "unknown": "massKg",
+    "quizOptions": [
+      "6 kg",
+      "12 kg",
+      "18 kg",
+      "24 kg"
+    ],
+    "quizCorrectAnswer": "6 kg",
+    "answer": {
+      "value": 6,
+      "unit": "kg"
+    },
+    "shortAcceptedAnswers": [],
+    "markScheme": [
+      {
+        "point": "Uses F = ma.",
+        "marks": 1
+      },
+      {
+        "point": "Substitutes the values correctly and gives the correct answer with unit.",
+        "marks": 1
+      }
+    ],
+    "marks": 2,
+    "workedSolution": "Use F = ma. m = 30 ÷ 5 = 6 kg."
+  },
+  {
+    "id": "gen_calc_q6",
+    "questionType": "calculation",
+    "formulaType": "F_MA",
+    "topic": {
+      "level1": "Forces and Motion",
+      "level2": "Physics",
+      "level3": "Forces and Newton's Laws"
+    },
+    "prompt": "A box accelerates at 2 m/s². Calculate the resultant force acting on the box, given that the box has a mass of 10 kg.",
+    "givenValues": {
+      "massKg": 10,
+      "accelerationMs2": 2,
+      "forceN": null
+    },
+    "unknown": "forceN",
+    "quizOptions": [
+      "20 N",
+      "10 N",
+      "5 N",
+      "1 N"
+    ],
+    "quizCorrectAnswer": "20 N",
+    "answer": {
+      "value": 20,
+      "unit": "N"
+    },
+    "shortAcceptedAnswers": [],
+    "markScheme": [
+      {
+        "point": "Uses F = ma.",
+        "marks": 1
+      },
+      {
+        "point": "Substitutes the values correctly and gives the correct answer with unit.",
+        "marks": 1
+      }
+    ],
+    "marks": 2,
+    "workedSolution": "Use F = ma. F = 10 × 2 = 20 N."
+  },
+  {
+    "id": "gen_calc_q7",
+    "questionType": "calculation",
+    "formulaType": "F_MA",
+    "topic": {
+      "level1": "Forces and Motion",
+      "level2": "Physics",
+      "level3": "Forces and Newton's Laws"
+    },
+    "prompt": "A 5 kg model car is acted upon by a resultant force of 15 N. Calculate the acceleration of the model car.",
+    "givenValues": {
+      "massKg": 5,
+      "accelerationMs2": null,
+      "forceN": 15
+    },
+    "unknown": "accelerationMs2",
+    "quizOptions": [
+      "3 m/s²",
+      "1 m/s²",
+      "0.5 m/s²",
+      "2 m/s²"
+    ],
+    "quizCorrectAnswer": "3 m/s²",
+    "answer": {
+      "value": 3,
+      "unit": "m/s²"
+    },
+    "shortAcceptedAnswers": [],
+    "markScheme": [
+      {
+        "point": "Uses F = ma.",
+        "marks": 1
+      },
+      {
+        "point": "Substitutes the values correctly and gives the correct answer with unit.",
+        "marks": 1
+      }
+    ],
+    "marks": 2,
+    "workedSolution": "Use F = ma. a = 15 / 5 = 3 m/s²."
+  },
+  {
+    "id": "gen_calc_q8",
+    "questionType": "calculation",
+    "formulaType": "F_MA",
+    "topic": {
+      "level1": "Forces and Motion",
+      "level2": "Physics",
+      "level3": "Forces and Newton's Laws"
+    },
+    "prompt": "A 20 N force acts on a 4 kg box. Calculate the acceleration of the box.",
+    "givenValues": {
+      "massKg": 4,
+      "accelerationMs2": null,
+      "forceN": 20
+    },
+    "unknown": "accelerationMs2",
+    "quizOptions": [
+      "5 m/s²",
+      "2 m/s²",
+      "1 m/s²",
+      "0.5 m/s²"
+    ],
+    "quizCorrectAnswer": "5 m/s²",
+    "answer": {
+      "value": 5,
+      "unit": "m/s²"
+    },
+    "shortAcceptedAnswers": [],
+    "markScheme": [
+      {
+        "point": "Uses F = ma.",
+        "marks": 1
+      },
+      {
+        "point": "Substitutes the values correctly and gives the correct answer with unit.",
+        "marks": 1
+      }
+    ],
+    "marks": 2,
+    "workedSolution": "Use F = ma. a = 20 / 4 = 5 m/s²."
+  },
+  {
+    "id": "gen_calc_q9",
+    "questionType": "calculation",
+    "formulaType": "F_MA",
+    "topic": {
+      "level1": "Forces and Motion",
+      "level2": "Physics",
+      "level3": "Forces and Newton's Laws"
+    },
+    "prompt": "A resultant force of 20 N causes an acceleration of 4 m/s². Calculate the mass of the object.",
+    "givenValues": {
+      "massKg": null,
+      "accelerationMs2": 4,
+      "forceN": 20
+    },
+    "unknown": "massKg",
+    "quizOptions": [
+      "5 kg",
+      "10 kg",
+      "15 kg",
+      "25 kg"
+    ],
+    "quizCorrectAnswer": "5 kg",
+    "answer": {
+      "value": 5,
+      "unit": "kg"
+    },
+    "shortAcceptedAnswers": [],
+    "markScheme": [
+      {
+        "point": "Uses F = ma.",
+        "marks": 1
+      },
+      {
+        "point": "Substitutes the values correctly and gives the correct answer with unit.",
+        "marks": 1
+      }
+    ],
+    "marks": 2,
+    "workedSolution": "Use F = ma. m = 20 / 4 = 5 kg."
+  }
+]
+},
+{
+  "projectile motion": [
+    {
+      "id": "projectile_calc_q1",
+      "topic": {
+        "level1": "Forces and Motion",
+        "level2": "Physics",
+        "level3": "Projectile Motion"
+      },
+      "formulaType": "F_MA",
+      "prompt": "A projectile has a mass of 2.0 kg and accelerates vertically downward at 9.8 m/s^2. Calculate the resultant force acting on it.",
+      "quizOptions": [
+        "19.6 N",
+        "4.9 N",
+        "11.8 N",
+        "0.20 N"
+      ],
+      "quizCorrectAnswer": "19.6 N",
+      "shortAcceptedAnswers": [],
+      "givenValues": {
+        "massKg": 2,
+        "accelerationMs2": 9.8
+      },
+      "unknown": "forceN",
+      "answer": {
+        "value": 19.6,
+        "unit": "N"
+      },
+      "markScheme": [
+        {
+          "point": "Uses F = ma and substitutes the mass and acceleration correctly.",
+          "marks": 1
+        },
+        {
+          "point": "Calculates the resultant force as 19.6 N.",
+          "marks": 1
+        }
+      ],
+      "marks": 2,
+      "workedSolution": "Use F = ma. F = 2.0 × 9.8 = 19.6 N."
+    },
+    {
+      "id": "projectile_calc_q2",
+      "topic": {
+        "level1": "Forces and Motion",
+        "level2": "Physics",
+        "level3": "Projectile Motion"
+      },
+      "formulaType": "F_MA",
+      "prompt": "A 0.50 kg ball is moving through the air as a projectile. Its vertical acceleration is 9.8 m/s^2 downward. Calculate the resultant force acting on the ball.",
+      "quizOptions": [
+        "4.9 N",
+        "19.6 N",
+        "9.3 N",
+        "0.051 N"
+      ],
+      "quizCorrectAnswer": "4.9 N",
+      "shortAcceptedAnswers": [],
+      "givenValues": {
+        "massKg": 0.5,
+        "accelerationMs2": 9.8
+      },
+      "unknown": "forceN",
+      "answer": {
+        "value": 4.9,
+        "unit": "N"
+      },
+      "markScheme": [
+        {
+          "point": "Uses F = ma and substitutes the mass and acceleration correctly.",
+          "marks": 1
+        },
+        {
+          "point": "Calculates the resultant force as 4.9 N.",
+          "marks": 1
+        }
+      ],
+      "marks": 2,
+      "workedSolution": "Use F = ma. F = 0.50 × 9.8 = 4.9 N."
+    },
+    {
+      "id": "projectile_calc_q3",
+      "topic": {
+        "level1": "Forces and Motion",
+        "level2": "Physics",
+        "level3": "Projectile Motion"
+      },
+      "formulaType": "F_MA",
+      "prompt": "A projectile experiences a resultant downward force of 14.7 N. Its mass is 1.5 kg. Calculate its downward acceleration.",
+      "quizOptions": [
+        "9.8 m/s^2",
+        "22.1 m/s^2",
+        "13.2 m/s^2",
+        "0.10 m/s^2"
+      ],
+      "quizCorrectAnswer": "9.8 m/s^2",
+      "shortAcceptedAnswers": [],
+      "givenValues": {
+        "forceN": 14.7,
+        "massKg": 1.5
+      },
+      "unknown": "accelerationMs2",
+      "answer": {
+        "value": 9.8,
+        "unit": "m/s^2"
+      },
+      "markScheme": [
+        {
+          "point": "Rearranges F = ma to a = F/m and substitutes the values correctly.",
+          "marks": 1
+        },
+        {
+          "point": "Calculates the acceleration as 9.8 m/s^2.",
+          "marks": 1
+        }
+      ],
+      "marks": 2,
+      "workedSolution": "Rearrange F = ma to a = F/m. a = 14.7 ÷ 1.5 = 9.8 m/s^2."
+    },
+    {
+      "id": "projectile_calc_q4",
+      "topic": {
+        "level1": "Forces and Motion",
+        "level2": "Physics",
+        "level3": "Projectile Motion"
+      },
+      "formulaType": "F_MA",
+      "prompt": "A projectile experiences a resultant force of 29.4 N downward and accelerates downward at 9.8 m/s^2. Calculate its mass.",
+      "quizOptions": [
+        "3.0 kg",
+        "19.6 kg",
+        "2.0 kg",
+        "288.1 kg"
+      ],
+      "quizCorrectAnswer": "3.0 kg",
+      "shortAcceptedAnswers": [],
+      "givenValues": {
+        "forceN": 29.4,
+        "accelerationMs2": 9.8
+      },
+      "unknown": "massKg",
+      "answer": {
+        "value": 3,
+        "unit": "kg"
+      },
+      "markScheme": [
+        {
+          "point": "Rearranges F = ma to m = F/a and substitutes the values correctly.",
+          "marks": 1
+        },
+        {
+          "point": "Calculates the mass as 3.0 kg.",
+          "marks": 1
+        }
+      ],
+      "marks": 2,
+      "workedSolution": "Rearrange F = ma to m = F/a. m = 29.4 ÷ 9.8 = 3.0 kg."
+    },
+    {
+      "id": "projectile_calc_q5",
+      "topic": {
+        "level1": "Forces and Motion",
+        "level2": "Physics",
+        "level3": "Projectile Motion"
+      },
+      "formulaType": "F_MA",
+      "prompt": "A 0.20 kg projectile has a downward acceleration of 9.8 m/s^2 while air resistance is ignored. Calculate the resultant force on it.",
+      "quizOptions": [
+        "1.96 N",
+        "49.0 N",
+        "9.60 N",
+        "0.020 N"
+      ],
+      "quizCorrectAnswer": "1.96 N",
+      "shortAcceptedAnswers": [],
+      "givenValues": {
+        "massKg": 0.2,
+        "accelerationMs2": 9.8
+      },
+      "unknown": "forceN",
+      "answer": {
+        "value": 1.96,
+        "unit": "N"
+      },
+      "markScheme": [
+        {
+          "point": "Uses F = ma and substitutes the mass and acceleration correctly.",
+          "marks": 1
+        },
+        {
+          "point": "Calculates the resultant force as 1.96 N.",
+          "marks": 1
+        }
+      ],
+      "marks": 2,
+      "workedSolution": "Use F = ma. F = 0.20 × 9.8 = 1.96 N."
+    },
+    {
+      "id": "projectile_calc_q6",
+      "topic": {
+        "level1": "Forces and Motion",
+        "level2": "Physics",
+        "level3": "Projectile Motion"
+      },
+      "formulaType": "F_MA",
+      "prompt": "A projectile of mass 4.0 kg experiences a resultant downward force of 39.2 N. Calculate its acceleration.",
+      "quizOptions": [
+        "9.8 m/s^2",
+        "156.8 m/s^2",
+        "35.2 m/s^2",
+        "0.102 m/s^2"
+      ],
+      "quizCorrectAnswer": "9.8 m/s^2",
+      "shortAcceptedAnswers": [],
+      "givenValues": {
+        "forceN": 39.2,
+        "massKg": 4
+      },
+      "unknown": "accelerationMs2",
+      "answer": {
+        "value": 9.8,
+        "unit": "m/s^2"
+      },
+      "markScheme": [
+        {
+          "point": "Rearranges F = ma to a = F/m and substitutes the values correctly.",
+          "marks": 1
+        },
+        {
+          "point": "Calculates the acceleration as 9.8 m/s^2.",
+          "marks": 1
+        }
+      ],
+      "marks": 2,
+      "workedSolution": "Rearrange F = ma to a = F/m. a = 39.2 ÷ 4.0 = 9.8 m/s^2."
+    },
+    {
+      "id": "projectile_calc_q7",
+      "topic": {
+        "level1": "Forces and Motion",
+        "level2": "Physics",
+        "level3": "Projectile Motion"
+      },
+      "formulaType": "F_MA",
+      "prompt": "A projectile accelerates downward at 9.8 m/s^2 because of a resultant force of 7.84 N. Calculate the mass of the projectile.",
+      "quizOptions": [
+        "0.80 kg",
+        "76.8 kg",
+        "1.25 kg",
+        "17.64 kg"
+      ],
+      "quizCorrectAnswer": "0.80 kg",
+      "shortAcceptedAnswers": [],
+      "givenValues": {
+        "forceN": 7.84,
+        "accelerationMs2": 9.8
+      },
+      "unknown": "massKg",
+      "answer": {
+        "value": 0.8,
+        "unit": "kg"
+      },
+      "markScheme": [
+        {
+          "point": "Rearranges F = ma to m = F/a and substitutes the values correctly.",
+          "marks": 1
+        },
+        {
+          "point": "Calculates the mass as 0.80 kg.",
+          "marks": 1
+        }
+      ],
+      "marks": 2,
+      "workedSolution": "Rearrange F = ma to m = F/a. m = 7.84 ÷ 9.8 = 0.80 kg."
+    },
+    {
+      "id": "projectile_calc_q8",
+      "topic": {
+        "level1": "Forces and Motion",
+        "level2": "Physics",
+        "level3": "Projectile Motion"
+      },
+      "formulaType": "F_MA",
+      "prompt": "A 2.5 kg projectile experiences a resultant acceleration of 6.0 m/s^2 downward because air resistance reduces its acceleration. Calculate the resultant force.",
+      "quizOptions": [
+        "15.0 N",
+        "0.42 N",
+        "8.5 N",
+        "60.0 N"
+      ],
+      "quizCorrectAnswer": "15.0 N",
+      "shortAcceptedAnswers": [],
+      "givenValues": {
+        "massKg": 2.5,
+        "accelerationMs2": 6
+      },
+      "unknown": "forceN",
+      "answer": {
+        "value": 15,
+        "unit": "N"
+      },
+      "markScheme": [
+        {
+          "point": "Uses F = ma and substitutes the mass and acceleration correctly.",
+          "marks": 1
+        },
+        {
+          "point": "Calculates the resultant force as 15.0 N.",
+          "marks": 1
+        }
+      ],
+      "marks": 2,
+      "workedSolution": "Use F = ma. F = 2.5 × 6.0 = 15.0 N."
+    },
+    {
+      "id": "projectile_calc_q9",
+      "topic": {
+        "level1": "Forces and Motion",
+        "level2": "Physics",
+        "level3": "Projectile Motion"
+      },
+      "formulaType": "F_MA",
+      "prompt": "A projectile of mass 1.2 kg experiences a resultant downward force of 6.0 N while moving through the air. Calculate its downward acceleration.",
+      "quizOptions": [
+        "5.0 m/s^2",
+        "7.2 m/s^2",
+        "0.20 m/s^2",
+        "4.8 m/s^2"
+      ],
+      "quizCorrectAnswer": "5.0 m/s^2",
+      "shortAcceptedAnswers": [],
+      "givenValues": {
+        "forceN": 6,
+        "massKg": 1.2
+      },
+      "unknown": "accelerationMs2",
+      "answer": {
+        "value": 5,
+        "unit": "m/s^2"
+      },
+      "markScheme": [
+        {
+          "point": "Rearranges F = ma to a = F/m and substitutes the values correctly.",
+          "marks": 1
+        },
+        {
+          "point": "Calculates the acceleration as 5.0 m/s^2.",
+          "marks": 1
+        }
+      ],
+      "marks": 2,
+      "workedSolution": "Rearrange F = ma to a = F/m. a = 6.0 ÷ 1.2 = 5.0 m/s^2."
+    },
+    {
+      "id": "projectile_calc_q10",
+      "topic": {
+        "level1": "Forces and Motion",
+        "level2": "Physics",
+        "level3": "Projectile Motion"
+      },
+      "formulaType": "F_MA",
+      "prompt": "A projectile experiences a resultant force of 12 N and an acceleration of 4.0 m/s^2. Calculate the mass of the projectile.",
+      "quizOptions": [
+        "3.0 kg",
+        "48 kg",
+        "8.0 kg",
+        "0.33 kg"
+      ],
+      "quizCorrectAnswer": "3.0 kg",
+      "shortAcceptedAnswers": [],
+      "givenValues": {
+        "forceN": 12,
+        "accelerationMs2": 4
+      },
+      "unknown": "massKg",
+      "answer": {
+        "value": 3,
+        "unit": "kg"
+      },
+      "markScheme": [
+        {
+          "point": "Rearranges F = ma to m = F/a and substitutes the values correctly.",
+          "marks": 1
+        },
+        {
+          "point": "Calculates the mass as 3.0 kg.",
+          "marks": 1
+        }
+      ],
+      "marks": 2,
+      "workedSolution": "Rearrange F = ma to m = F/a. m = 12 ÷ 4.0 = 3.0 kg."
+    }
+  ]
+}
+]

@@ -149,6 +149,16 @@ select {
   color: var(--color-muted);
 }
 
+.error-message {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #fff1f2;
+  color: #b91c1c;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
 .progress-card {
   grid-column: 2;
   justify-self: center;
@@ -553,4 +563,103 @@ select {
   .quit-confirm-button {
     width: 100%;
   }
+}
+
+.topic-branch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.topic-branch-level {
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.topic-leaf {
+  width: 100%;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  padding: 10px 12px;
+  background: #ffffff;
+  color: #172033;
+  text-align: left;
+}
+
+.topic-leaf.is-selected-topic {
+  border-color: rgba(49, 87, 213, 0.2);
+  background: #eef2ff;
+  color: #2444ad;
+  font-weight: 750;
+}
+
+.loading-page-shell {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  padding: 24px;
+}
+
+.loading-card {
+  display: grid;
+  width: min(460px, 100%);
+  justify-items: center;
+  gap: 16px;
+  border: 1px solid rgba(217, 226, 236, 0.9);
+  border-radius: 28px;
+  padding: 42px 30px;
+  background: rgba(255, 255, 255, 0.94);
+  text-align: center;
+  box-shadow: 0 22px 58px rgba(15, 23, 42, 0.1);
+}
+
+.loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 5px solid #dbe4ff;
+  border-top-color: #3157d5;
+  border-radius: 50%;
+  animation: maxi-loading-spin 0.8s linear infinite;
+}
+
+.loading-title {
+  margin: 0;
+  color: #172033;
+  font-size: 1.5rem;
+}
+
+.loading-description {
+  margin: 0;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+@keyframes maxi-loading-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-spinner {
+    animation-duration: 1.8s;
+  }
+}
+
+.topic-leaf {
+  display: block;
+  appearance: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+.topic-leaf:not(.is-selected-topic):hover {
+  border-color: rgba(49, 87, 213, 0.2);
+  background: #f8faff;
+}
+
+.topic-leaf.is-selected-topic {
+  cursor: default;
 }
