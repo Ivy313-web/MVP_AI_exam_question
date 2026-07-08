@@ -1,0 +1,807 @@
+[{"forces and newton's laws":[
+  {
+    "topic": {
+      "level1": "Forces and Motion",
+      "level2": "Physics",
+      "level3": "Forces and Newton's Laws"
+    },
+    "prompt": "A car is moving at a constant velocity. What can be said about the resultant force acting on it?",
+    "quizOptions": [
+      "The resultant force is zero.",
+      "The resultant force is in the direction of motion.",
+      "The resultant force is opposite to the direction of motion.",
+      "The resultant force is increasing."
+    ],
+    "quizCorrectAnswer": "The resultant force is zero.",
+    "shortAcceptedAnswers": [],
+    "markScheme": [
+      {
+        "point": "The resultant force acting on the car is zero.",
+        "marks": 1
+      }
+    ],
+    "marks": 1,
+    "workedSolution": "When an object moves at a constant velocity, the resultant force acting on it is zero.",
+    "id": "test_gen_concept_q1"
+  },
+  {
+    "topic": {
+      "level1": "Forces and Motion",
+      "level2": "Physics",
+      "level3": "Forces and Newton's Laws"
+    },
+    "prompt": "Explain how the normal contact force acts on an object placed on a horizontal surface",
+    "quizOptions": [
+      "The normal contact force acts perpendicular to the surface.",
+      "The normal contact force acts in the direction of motion.",
+      "The normal contact force acts opposite to the direction of motion.",
+      "The normal contact force acts at an angle to the surface."
+    ],
+    "quizCorrectAnswer": "The normal contact force acts perpendicular to the surface.",
+    "shortAcceptedAnswers": [],
+    "markScheme": [
+      {
+        "point": "The normal contact force acts perpendicular to the surface.",
+        "marks": 1
+      }
+    ],
+    "marks": 1,
+    "workedSolution": "The normal contact force acts perpendicular to the surface, supporting the object.",
+    "id": "test_gen_concept_q2"
+  },
+  {
+    "topic": {
+      "level1": "Forces and Motion",
+      "level2": "Physics",
+      "level3": "Forces and Newton's Laws"
+    },
+    "prompt": "Define the term 'resultant force' and state its effect on an object's motion",
+    "quizOptions": [
+      "Resultant force is the vector sum of forces and causes acceleration.",
+      "Resultant force is the scalar sum of forces and causes deceleration.",
+      "Resultant force is the vector sum of forces and has no effect on motion.",
+      "Resultant force is the scalar sum of forces and causes acceleration."
+    ],
+    "quizCorrectAnswer": "Resultant force is the vector sum of forces and causes acceleration.",
+    "shortAcceptedAnswers": [],
+    "markScheme": [
+      {
+        "point": "The resultant force is the vector sum of all forces acting on an object.",
+        "marks": 1
+      },
+      {
+        "point": "The resultant force causes acceleration in its direction.",
+        "marks": 1
+      }
+    ],
+    "marks": 2,
+    "workedSolution": "The resultant force is the vector sum of forces acting on an object and causes acceleration in its direction.",
+    "id": "test_gen_concept_q3"
+  },
+  {
+    "topic": {
+      "level1": "Forces and Motion",
+      "level2": "Physics",
+      "level3": "Forces and Newton's Laws"
+    },
+    "prompt": "State the condition under which an object will have zero acceleration",
+    "quizOptions": [
+      "When the resultant force is zero.",
+      "When the force of gravity is zero.",
+      "When the normal contact force is zero.",
+      "When the frictional force is zero."
+    ],
+    "quizCorrectAnswer": "When the resultant force is zero.",
+    "shortAcceptedAnswers": [],
+    "markScheme": [
+      {
+        "point": "An object will have zero acceleration when the resultant force acting on it is zero.",
+        "marks": 1
+      }
+    ],
+    "marks": 1,
+    "workedSolution": "An object has zero acceleration when the resultant force acting on it is zero.",
+    "id": "test_gen_concept_q4"
+  },
+  {
+    "topic": {
+      "level1": "Forces and Motion",
+      "level2": "Physics",
+      "level3": "Forces and Newton's Laws"
+    },
+    "prompt": "Compare the direction of the normal contact force and the force of gravity acting on an object on a horizontal surface",
+    "quizOptions": [
+      "The normal contact force acts upward and the force of gravity acts downward.",
+      "The normal contact force acts downward and the force of gravity acts upward.",
+      "Both forces act in the same direction.",
+      "Both forces act at an angle to the surface."
+    ],
+    "quizCorrectAnswer": "The normal contact force acts upward and the force of gravity acts downward.",
+    "shortAcceptedAnswers": [],
+    "markScheme": [
+      {
+        "point": "The normal contact force acts upward, perpendicular to the surface.",
+        "marks": 1
+      },
+      {
+        "point": "The force of gravity acts downward, toward the center of the Earth.",
+        "marks": 1
+      }
+    ],
+    "marks": 2,
+    "workedSolution": "On a horizontal surface, the normal contact force acts upward and the force of gravity acts downward.",
+    "id": "test_gen_concept_q5"
+  },
+  {
+    "topic": {
+      "level1": "Forces and Motion",
+      "level2": "Physics",
+      "level3": "Forces and Newton's Laws"
+    },
+    "prompt": "State the effect of air resistance on an object moving through the air",
+    "quizOptions": [
+      "Air resistance opposes the motion of the object.",
+      "Air resistance aids the motion of the object.",
+      "Air resistance has no effect on the motion of the object.",
+      "Air resistance increases the motion of the object."
+    ],
+    "quizCorrectAnswer": "Air resistance opposes the motion of the object.",
+    "shortAcceptedAnswers": [],
+    "markScheme": [
+      {
+        "point": "Air resistance opposes the motion of an object moving through the air.",
+        "marks": 1
+      }
+    ],
+    "marks": 1,
+    "workedSolution": "Air resistance is a force that opposes the motion of an object as it moves through the air.",
+    "id": "test_gen_concept_q6"
+  },
+  {
+    "topic": {
+      "level1": "Forces and Motion",
+      "level2": "Physics",
+      "level3": "Forces and Newton's Laws"
+    },
+    "prompt": "Explain how friction acts between two surfaces in contact",
+    "quizOptions": [
+      "Friction opposes relative motion between the surfaces.",
+      "Friction aids relative motion between the surfaces.",
+      "Friction has no effect on relative motion between the surfaces.",
+      "Friction increases relative motion between the surfaces."
+    ],
+    "quizCorrectAnswer": "Friction opposes relative motion between the surfaces.",
+    "shortAcceptedAnswers": [],
+    "markScheme": [
+      {
+        "point": "Friction acts between surfaces in contact and opposes relative motion or the tendency of relative motion.",
+        "marks": 1
+      }
+    ],
+    "marks": 1,
+    "workedSolution": "Friction is a force that opposes relative motion between two surfaces in contact.",
+    "id": "test_gen_concept_q7"
+  },
+  {
+    "topic": {
+      "level1": "Forces and Motion",
+      "level2": "Physics",
+      "level3": "Forces and Newton's Laws"
+    },
+    "prompt": "State the effect of a resultant force on an object's motion",
+    "quizOptions": [
+      "The resultant force causes acceleration in its direction.",
+      "The resultant force causes deceleration in its direction.",
+      "The resultant force has no effect on the motion.",
+      "The resultant force causes motion in the opposite direction."
+    ],
+    "quizCorrectAnswer": "The resultant force causes acceleration in its direction.",
+    "shortAcceptedAnswers": [],
+    "markScheme": [
+      {
+        "point": "The resultant force causes acceleration in its direction.",
+        "marks": 1
+      }
+    ],
+    "marks": 1,
+    "workedSolution": "The resultant force acting on an object causes acceleration in its direction, as described by Newton's Second Law of Motion.",
+    "id": "test_gen_concept_q8"
+  },
+  {
+    "topic": {
+      "level1": "Forces and Motion",
+      "level2": "Physics",
+      "level3": "Forces and Newton's Laws"
+    },
+    "prompt": "Explain how the direction of the force of gravity affects the motion of a projectile",
+    "quizOptions": [
+      "Gravity affects the horizontal motion of the projectile.",
+      "Gravity causes vertical acceleration of the projectile.",
+      "Gravity has no effect on the motion of the projectile.",
+      "Gravity causes the projectile to move in a straight line."
+    ],
+    "quizCorrectAnswer": "Gravity causes vertical acceleration of the projectile.",
+    "shortAcceptedAnswers": [],
+    "markScheme": [
+      {
+        "point": "The force of gravity acts vertically downwards on the projectile.",
+        "marks": 1
+      },
+      {
+        "point": "The force of gravity causes a vertical acceleration of the projectile.",
+        "marks": 1
+      }
+    ],
+    "marks": 2,
+    "workedSolution": "The force of gravity acts vertically downwards and causes a vertical acceleration of the projectile.",
+    "id": "test_gen_concept_q10"
+  },
+  {
+    "topic": {
+      "level1": "Forces and Motion",
+      "level2": "Physics",
+      "level3": "Forces and Newton's Laws"
+    },
+    "prompt": "State the relationship between the mass of an object and its acceleration when a constant force is applied",
+    "quizOptions": [
+      "The acceleration is directly proportional to the mass.",
+      "The acceleration is inversely proportional to the mass.",
+      "The mass has no effect on the acceleration.",
+      "The acceleration is directly proportional to the square of the mass."
+    ],
+    "quizCorrectAnswer": "The acceleration is inversely proportional to the mass.",
+    "shortAcceptedAnswers": [],
+    "markScheme": [
+      {
+        "point": "For a constant force, the acceleration of an object is inversely proportional to its mass.",
+        "marks": 1
+      }
+    ],
+    "marks": 1,
+    "workedSolution": "According to Newton's second law, F = ma, so for a constant force, a is inversely proportional to m.",
+    "id": "test_gen_concept_q11"
+  },
+  {
+    "topic": {
+      "level1": "Forces and Motion",
+      "level2": "Physics",
+      "level3": "Forces and Newton's Laws"
+    },
+    "prompt": "Compare the effect of air resistance on a skydiver before and after opening their parachute",
+    "quizOptions": [
+      "Air resistance is the same before and after opening the parachute.",
+      "Air resistance is greater before opening the parachute.",
+      "Air resistance opposes motion and is greater after opening the parachute.",
+      "Air resistance has no effect on the skydiver's motion."
+    ],
+    "quizCorrectAnswer": "Air resistance opposes motion and is greater after opening the parachute.",
+    "shortAcceptedAnswers": [],
+    "markScheme": [
+      {
+        "point": "Air resistance opposes the motion of the skydiver.",
+        "marks": 1
+      },
+      {
+        "point": "The air resistance is greater after the parachute is opened, due to the increased surface area.",
+        "marks": 1
+      }
+    ],
+    "marks": 2,
+    "workedSolution": "Air resistance opposes the motion of the skydiver and is greater after the parachute is opened.",
+    "id": "test_gen_concept_q12"
+  },
+  {
+    "topic": {
+      "level1": "Forces and Motion",
+      "level2": "Physics",
+      "level3": "Forces and Newton's Laws"
+    },
+    "prompt": "Explain how friction acts between two surfaces in contact when they are moving relative to each other",
+    "quizOptions": [
+      "Friction acts perpendicular to the surfaces and causes the objects to stick together.",
+      "Friction acts parallel to the surfaces and opposes their relative motion.",
+      "Friction has no effect on the motion of the objects.",
+      "Friction causes the objects to move faster."
+    ],
+    "quizCorrectAnswer": "Friction acts parallel to the surfaces and opposes their relative motion.",
+    "shortAcceptedAnswers": [],
+    "markScheme": [
+      {
+        "point": "Friction acts between the two surfaces in contact and opposes their relative motion.",
+        "marks": 1
+      },
+      {
+        "point": "The direction of the frictional force is parallel to the surfaces in contact.",
+        "marks": 1
+      }
+    ],
+    "marks": 2,
+    "workedSolution": "Friction acts between the two surfaces in contact, opposing their relative motion, and its direction is parallel to the surfaces.",
+    "id": "test_gen_concept_q14"
+  },
+  {
+    "topic": {
+      "level1": "Forces and Motion",
+      "level2": "Physics",
+      "level3": "Forces and Newton's Laws"
+    },
+    "prompt": "Explain how the force of gravity affects the motion of an object on an inclined plane",
+    "quizOptions": [
+      "Gravity has no effect on the motion of the object.",
+      "Gravity causes the object to move up the plane.",
+      "Gravity causes the object to move down the plane.",
+      "Gravity causes the object to move perpendicular to the plane."
+    ],
+    "quizCorrectAnswer": "Gravity causes the object to move down the plane.",
+    "shortAcceptedAnswers": [],
+    "markScheme": [
+      {
+        "point": "The force of gravity acts vertically downwards on the object.",
+        "marks": 1
+      },
+      {
+        "point": "The component of gravity parallel to the inclined plane causes the object to accelerate down the plane.",
+        "marks": 1
+      }
+    ],
+    "marks": 2,
+    "workedSolution": "The force of gravity acts vertically downwards and has a component parallel to the inclined plane, causing the object to accelerate down the plane.",
+    "id": "test_gen_concept_q16"
+  },
+  {
+    "topic": {
+      "level1": "Forces and Motion",
+      "level2": "Physics",
+      "level3": "Forces and Newton's Laws"
+    },
+    "prompt": "State the condition under which an object will have a constant acceleration",
+    "quizOptions": [
+      "When the net force acting on the object is zero.",
+      "When the net force acting on the object is constant.",
+      "When the mass of the object is constant.",
+      "When the velocity of the object is constant."
+    ],
+    "quizCorrectAnswer": "When the net force acting on the object is constant.",
+    "shortAcceptedAnswers": [],
+    "markScheme": [
+      {
+        "point": "An object will have a constant acceleration when a constant resultant force acts on it.",
+        "marks": 1
+      }
+    ],
+    "marks": 1,
+    "workedSolution": "According to Newton's second law, a constant resultant force causes a constant acceleration.",
+    "id": "test_gen_concept_q17"
+  },
+  {
+    "topic": {
+      "level1": "Forces and Motion",
+      "level2": "Physics",
+      "level3": "Forces and Newton's Laws"
+    },
+    "prompt": "A car is traveling at a constant velocity. What can be said about the resultant force acting on the car?",
+    "quizOptions": [
+      "The resultant force is zero.",
+      "The resultant force is non-zero.",
+      "The resultant force is acting in the opposite direction to the car's motion.",
+      "The resultant force is acting in the same direction as the car's motion."
+    ],
+    "quizCorrectAnswer": "The resultant force is zero.",
+    "shortAcceptedAnswers": [],
+    "markScheme": [
+      {
+        "point": "The resultant force acting on the car is zero.",
+        "marks": 1
+      }
+    ],
+    "marks": 1,
+    "workedSolution": "When an object is traveling at a constant velocity, the resultant force acting on it is zero.",
+    "id": "test_gen_concept_q18"
+  },
+  {
+    "topic": {
+      "level1": "Forces and Motion",
+      "level2": "Physics",
+      "level3": "Forces and Newton's Laws"
+    },
+    "prompt": "Define the term 'resultant force'",
+    "quizOptions": [
+      "The vector sum of all forces acting on an object.",
+      "The largest force acting on an object.",
+      "The smallest force acting on an object.",
+      "A single force acting on an object."
+    ],
+    "quizCorrectAnswer": "The vector sum of all forces acting on an object.",
+    "shortAcceptedAnswers": [],
+    "markScheme": [
+      {
+        "point": "The resultant force is the vector sum of all forces acting on an object.",
+        "marks": 1
+      }
+    ],
+    "marks": 1,
+    "workedSolution": "The resultant force is the vector sum of all forces acting on an object, and it determines the object's motion.",
+    "id": "test_gen_concept_q19"
+  },
+  {
+    "topic": {
+      "level1": "Forces and Motion",
+      "level2": "Physics",
+      "level3": "Forces and Newton's Laws"
+    },
+    "prompt": "Compare the direction of the resultant force with the direction of acceleration",
+    "quizOptions": [
+      "The resultant force and acceleration are in the same direction.",
+      "The resultant force and acceleration are in opposite directions.",
+      "The resultant force is zero, but acceleration is non-zero.",
+      "The resultant force is non-zero, but acceleration is zero."
+    ],
+    "quizCorrectAnswer": "The resultant force and acceleration are in the same direction.",
+    "shortAcceptedAnswers": [],
+    "markScheme": [
+      {
+        "point": "The resultant force and acceleration are in the same direction.",
+        "marks": 1
+      }
+    ],
+    "marks": 1,
+    "workedSolution": "The direction of the resultant force is the same as the direction of acceleration, as stated by Newton's second law.",
+    "id": "test_gen_concept_q20"
+  },
+  {
+    "topic": {
+      "level1": "Forces and Motion",
+      "level2": "Physics",
+      "level3": "Forces and Newton's Laws"
+    },
+    "prompt": "State the condition under which an object will have zero acceleration",
+    "quizOptions": [
+      "The resultant force is zero.",
+      "The resultant force is non-zero.",
+      "The object is at rest.",
+      "The object is moving with a constant velocity."
+    ],
+    "quizCorrectAnswer": "The resultant force is zero.",
+    "shortAcceptedAnswers": [],
+    "markScheme": [
+      {
+        "point": "An object will have zero acceleration when the resultant force acting on it is zero.",
+        "marks": 1
+      }
+    ],
+    "marks": 1,
+    "workedSolution": "According to Newton's first law, an object will have zero acceleration when the resultant force acting on it is zero.",
+    "id": "test_gen_concept_q21"
+  }
+]
+},
+{
+  "projectile motion": [
+    {
+      "id": "q1",
+      "topic": {
+        "level1": "Forces and Motion",
+        "level2": "Physics",
+        "level3": "Projectile Motion"
+      },
+      "prompt": "Which component of velocity remains constant in ideal projectile motion when air resistance is ignored?",
+      "quizOptions": [
+        "Horizontal velocity",
+        "Vertical velocity",
+        "Resultant velocity",
+        "Terminal velocity"
+      ],
+      "quizCorrectAnswer": "Horizontal velocity",
+      "shortAcceptedAnswers": [
+        "horizontal velocity",
+        "horizontal component of velocity",
+        "x velocity"
+      ],
+      "markScheme": [
+        {
+          "point": "Identifies the horizontal component of velocity as the component that remains constant.",
+          "marks": 1
+        }
+      ],
+      "marks": 1,
+      "workedSolution": "When air resistance is ignored, there is no horizontal resultant force, so the horizontal acceleration is zero and the horizontal velocity remains constant."
+    },
+    {
+      "id": "q2",
+      "topic": {
+        "level1": "Forces and Motion",
+        "level2": "Physics",
+        "level3": "Projectile Motion"
+      },
+      "prompt": "Explain the acceleration of a projectile near Earth's surface when air resistance is ignored.",
+      "quizOptions": [
+        "0 m/s^2",
+        "9.8 m/s^2 downward",
+        "9.8 m/s^2 upward",
+        "It changes with speed"
+      ],
+      "quizCorrectAnswer": "9.8 m/s^2 downward",
+      "shortAcceptedAnswers": [
+        "constant 9.8 m/s^2 downward",
+        "constant 9.8 metres per second squared downward",
+        "constant g downward",
+        "constant gravity downward"
+      ],
+      "markScheme": [
+        {
+          "point": "States the acceleration magnitude as 9.8 m/s^2 or g, including a valid acceleration unit or the symbol g.",
+          "marks": 1
+        },
+        {
+          "point": "States that the acceleration is downward or towards Earth.",
+          "marks": 1
+        }
+      ],
+      "marks": 2,
+      "workedSolution": "The projectile has a constant acceleration of approximately 9.8 m/s^2 vertically downward because gravity is the only force acting on it."
+    },
+    {
+      "id": "q3",
+      "topic": {
+        "level1": "Forces and Motion",
+        "level2": "Physics",
+        "level3": "Projectile Motion"
+      },
+      "prompt": "At the highest point of a projectile's path, what is its vertical velocity?",
+      "quizOptions": [
+        "Zero",
+        "Maximum",
+        "Equal to horizontal velocity",
+        "Equal to acceleration"
+      ],
+      "quizCorrectAnswer": "Zero",
+      "shortAcceptedAnswers": [
+        "zero",
+        "0",
+        "0 m/s"
+      ],
+      "markScheme": [
+        {
+          "point": "States that the vertical velocity is zero at the highest point.",
+          "marks": 1
+        }
+      ],
+      "marks": 1,
+      "workedSolution": "At the highest point, the projectile stops moving upward momentarily, so its vertical velocity is zero."
+    },
+    {
+      "id": "q4",
+      "topic": {
+        "level1": "Forces and Motion",
+        "level2": "Physics",
+        "level3": "Projectile Motion"
+      },
+      "prompt": "What shape is the path of an ideal projectile?",
+      "quizOptions": [
+        "Parabola",
+        "Circle",
+        "Ellipse",
+        "Straight line"
+      ],
+      "quizCorrectAnswer": "Parabola",
+      "shortAcceptedAnswers": [
+        "parabola",
+        "parabolic",
+        "a parabola"
+      ],
+      "markScheme": [
+        {
+          "point": "States that the path of an ideal projectile is parabolic.",
+          "marks": 1
+        }
+      ],
+      "marks": 1,
+      "workedSolution": "The horizontal motion is uniform while the vertical motion has constant acceleration, producing a parabolic path."
+    },
+    {
+      "id": "q5",
+      "topic": {
+        "level1": "Forces and Motion",
+        "level2": "Physics",
+        "level3": "Projectile Motion"
+      },
+      "prompt": "Which force acts on an ideal projectile after launch when air resistance is ignored?",
+      "quizOptions": [
+        "Weight",
+        "Thrust",
+        "Drag",
+        "Normal reaction"
+      ],
+      "quizCorrectAnswer": "Weight",
+      "shortAcceptedAnswers": [
+        "weight",
+        "gravity",
+        "gravitational force"
+      ],
+      "markScheme": [
+        {
+          "point": "States that weight, gravity, or the gravitational force acts on the projectile after launch.",
+          "marks": 1
+        }
+      ],
+      "marks": 1,
+      "workedSolution": "After launch, the only force acting on an ideal projectile is its weight due to gravity."
+    },
+    {
+      "id": "q6",
+      "topic": {
+        "level1": "Forces and Motion",
+        "level2": "Physics",
+        "level3": "Projectile Motion"
+      },
+      "prompt": "For launch and landing at the same height, which launch angle gives maximum range?",
+      "quizOptions": [
+        "45 degrees",
+        "30 degrees",
+        "60 degrees",
+        "90 degrees"
+      ],
+      "quizCorrectAnswer": "45 degrees",
+      "shortAcceptedAnswers": [
+        "45 degrees",
+        "45",
+        "45°"
+      ],
+      "markScheme": [
+        {
+          "point": "States that a launch angle of 45 degrees gives the maximum range when launch and landing heights are equal.",
+          "marks": 1
+        }
+      ],
+      "marks": 1,
+      "workedSolution": "For a fixed launch speed and equal launch and landing heights, the maximum horizontal range occurs at 45 degrees."
+    },
+    {
+      "id": "q7",
+      "topic": {
+        "level1": "Forces and Motion",
+        "level2": "Physics",
+        "level3": "Projectile Motion"
+      },
+      "prompt": "If initial speed is fixed, what happens to time of flight when the vertical launch component increases?",
+      "quizOptions": [
+        "It increases",
+        "It decreases",
+        "It becomes zero",
+        "It is unaffected"
+      ],
+      "quizCorrectAnswer": "It increases",
+      "shortAcceptedAnswers": [
+        "it increases",
+        "increases",
+        "gets longer",
+        "time of flight increases"
+      ],
+      "markScheme": [
+        {
+          "point": "States that the time of flight increases when the vertical launch component increases.",
+          "marks": 1
+        }
+      ],
+      "marks": 1,
+      "workedSolution": "A larger vertical launch component means the projectile takes longer to rise and return, so the total time of flight increases."
+    },
+    {
+      "id": "q8",
+      "topic": {
+        "level1": "Forces and Motion",
+        "level2": "Physics",
+        "level3": "Projectile Motion"
+      },
+      "prompt": "Which initial velocity component determines the range when time of flight is known?",
+      "quizOptions": [
+        "Horizontal component",
+        "Vertical component",
+        "Acceleration component",
+        "Resultant component"
+      ],
+      "quizCorrectAnswer": "Horizontal component",
+      "shortAcceptedAnswers": [
+        "horizontal component",
+        "horizontal velocity",
+        "horizontal component of velocity"
+      ],
+      "markScheme": [
+        {
+          "point": "Identifies the horizontal velocity component as determining the range when time of flight is known.",
+          "marks": 1
+        }
+      ],
+      "marks": 1,
+      "workedSolution": "The horizontal range equals the horizontal velocity multiplied by the time of flight."
+    },
+    {
+      "id": "q9",
+      "topic": {
+        "level1": "Forces and Motion",
+        "level2": "Physics",
+        "level3": "Projectile Motion"
+      },
+      "prompt": "What assumption allows horizontal acceleration to be zero in projectile motion?",
+      "quizOptions": [
+        "No air resistance",
+        "Constant mass",
+        "Small launch angle",
+        "High launch speed"
+      ],
+      "quizCorrectAnswer": "No air resistance",
+      "shortAcceptedAnswers": [
+        "no air resistance",
+        "air resistance ignored",
+        "ignore air resistance",
+        "no drag"
+      ],
+      "markScheme": [
+        {
+          "point": "States that air resistance is ignored or that there is no drag.",
+          "marks": 1
+        }
+      ],
+      "marks": 1,
+      "workedSolution": "When air resistance is ignored, there is no horizontal force acting on the projectile, so its horizontal acceleration is zero."
+    },
+    {
+      "id": "q10",
+      "topic": {
+        "level1": "Forces and Motion",
+        "level2": "Physics",
+        "level3": "Projectile Motion"
+      },
+      "prompt": "What is the horizontal displacement of a projectile commonly called?",
+      "quizOptions": [
+        "Range",
+        "Height",
+        "Amplitude",
+        "Period"
+      ],
+      "quizCorrectAnswer": "Range",
+      "shortAcceptedAnswers": [
+        "range",
+        "horizontal range"
+      ],
+      "markScheme": [
+        {
+          "point": "States that the horizontal displacement of a projectile is called its range.",
+          "marks": 1
+        }
+      ],
+      "marks": 1,
+      "workedSolution": "The horizontal distance travelled by a projectile from launch to landing is called its range."
+    },
+    {
+      "id": "q11",
+      "topic": {
+        "level1": "Forces and Motion",
+        "level2": "Physics",
+        "level3": "Projectile Motion"
+      },
+      "prompt": "Explain why the horizontal velocity of a projectile remains constant when air resistance is ignored.",
+      "quizOptions": [
+        "There is no horizontal resultant force",
+        "Gravity acts horizontally",
+        "The vertical velocity is zero",
+        "The projectile has no weight"
+      ],
+      "quizCorrectAnswer": "There is no horizontal resultant force",
+      "shortAcceptedAnswers": [],
+      "markScheme": [
+        {
+          "point": "States that there is no horizontal resultant force acting on the projectile.",
+          "marks": 1
+        },
+        {
+          "point": "Explicitly links the lack of horizontal resultant force to zero horizontal acceleration or to the horizontal velocity remaining constant.",
+          "marks": 1
+        }
+      ],
+      "marks": 2,
+      "workedSolution": "With no air resistance, no horizontal resultant force acts on the projectile. Therefore, the horizontal acceleration is zero and the horizontal velocity remains constant."
+    }
+  ]
+}
+]

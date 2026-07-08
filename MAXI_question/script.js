@@ -4,8 +4,9 @@ const RESULT_STORAGE_KEY = "maxiResultSnapshot";
 // CONFIG
 const CONFIG = {
   topicPanelCollapsed: false,
-  topicBranchExpanded: true,
-  modeSelectionPath: "../MAXI_mode/mode.html",
+  topicBranchExpanded: false,
+  homePagePath: "../MAXI_home/home.html",
+  sharedTopicsPath: "../shared/topics.json",
   mockBackendURL: "http://localhost:3000"
 };
 
@@ -25,6 +26,15 @@ const appState = {
   isSubmitting: false,
   errorMessage: "",
   topicTree: {},
+  selectedSubjectId: "",
+  selectedLevelId: "",
+  selectedTopicId: "",
+  selectedTopicName: "",
+  pendingTopicId: "",
+  pendingTopicName: "",
+  topicChangeModalOpen: false,
+  isLoadingQuestions: true,
+  loadingMessage: "Loading your practice...",
   selectedMode: getModeFromURL(),
   attemptId: crypto.randomUUID(),
   resultSnapshot: [],
@@ -32,26 +42,101 @@ const appState = {
 };
 
 // TOPIC DATA
-const rawTopicTree = {
-  level1: "Topic",
-  children: [
-    {
-      level2: "Physics",
-      children: [
-        {
-          level3: "Projectile Motion"
-        }
-      ]
-    }
-  ]
-};
 
-// QUESTION DATA SOURCE
-async function loadQuestionsFromBackend() {
-  const response = await fetch(`${CONFIG.mockBackendURL}/api/questions?mix=half&limit=10&mode=${appState.selectedMode}`);
+function getPracticeSelectionFromURL() {
+  const params = new URLSearchParams(window.location.search);
+
+  return {
+    subjectId: params.get("subject") || "",
+    levelId: params.get("level") || "",
+    topicId: params.get("topic") || ""
+  };
+}
+
+async function loadSharedTopicsData() {
+  const response = await fetch(CONFIG.sharedTopicsPath);
 
   if (!response.ok) {
-    throw new Error(`Failed to load questions from backend with status ${response.status}`);
+    throw new Error(
+      `Failed to load shared topics data with status ${response.status}`
+    );
+  }
+
+  const data = await response.json();
+
+  if (!Array.isArray(data.subjects)) {
+    throw new Error("Shared topics data is missing a subjects array");
+  }
+
+  return data;
+}
+
+function buildTopicTreeFromSharedData(data, requestedSelection) {
+  const defaultSubject = data.subjects[0];
+
+  const selectedSubject =
+    data.subjects.find((subject) => {
+      return subject.id === requestedSelection.subjectId;
+    }) || defaultSubject;
+
+  const defaultLevel = selectedSubject?.levels?.[0];
+
+  const selectedLevel =
+    selectedSubject?.levels?.find((level) => {
+      return level.id === requestedSelection.levelId;
+    }) || defaultLevel;
+
+  const defaultTopic = selectedLevel?.topics?.[0];
+
+  const selectedTopic =
+    selectedLevel?.topics?.find((topic) => {
+      return topic.id === requestedSelection.topicId;
+    }) || defaultTopic;
+
+  if (!selectedSubject || !selectedLevel || !selectedTopic) {
+    throw new Error("Unable to resolve the selected practice topic");
+  }
+
+  appState.selectedSubjectId = selectedSubject.id;
+  appState.selectedLevelId = selectedLevel.id;
+  appState.selectedTopicId = selectedTopic.id;
+  appState.selectedTopicName = selectedTopic.name;
+
+  return {
+    level1: "Topic",
+    children: [
+      {
+        id: selectedSubject.id,
+        level2: selectedSubject.name,
+        levelName: selectedLevel.name,
+        children: selectedLevel.topics.map((topic) => {
+          return {
+            id: topic.id,
+            level3: topic.name
+          };
+        })
+      }
+    ]
+  };
+}
+
+// QUESTION DATA SOURCE
+async function loadQuestionsFromBackend(topicName) {
+  const params = new URLSearchParams({
+    mix: "half",
+    limit: "10",
+    mode: appState.selectedMode,
+    topic: topicName
+  });
+
+  const response = await fetch(
+    `${CONFIG.mockBackendURL}/api/questions?${params.toString()}`
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      `Failed to load questions from backend with status ${response.status}`
+    );
   }
 
   const data = await response.json();
@@ -60,17 +145,96 @@ async function loadQuestionsFromBackend() {
     throw new Error("Backend questions response is missing a questions array");
   }
 
+  if (data.questions.length === 0) {
+    throw new Error(`No questions were found for ${topicName}`);
+  }
+
   return data.questions;
 }
 
 async function initializeQuestions() {
-  appState.topicTree = rawTopicTree;
-  appState.questions = await loadQuestionsFromBackend();
+  appState.isLoadingQuestions = true;
+  appState.loadingMessage = "Loading your practice...";
+
+  const requestedSelection = getPracticeSelectionFromURL();
+  const sharedTopicsData = await loadSharedTopicsData();
+
+  appState.topicTree = buildTopicTreeFromSharedData(
+    sharedTopicsData,
+    requestedSelection
+  );
+
+  appState.questions = await loadQuestionsFromBackend(
+    appState.selectedTopicName
+  );
+
+  appState.isLoadingQuestions = false;
 }
 
 // RENDER
+
+function renderTopicChangeModal() {
+  return `
+    <div class="quit-modal-overlay" data-action="topic-modal-overlay">
+      <section
+        class="quit-modal-card"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="topicChangeModalTitle"
+      >
+        <h2 id="topicChangeModalTitle" class="quit-modal-title">
+          Change topic?
+        </h2>
+
+        <p class="quit-modal-message">
+          Are you sure you want to switch to
+          <strong>${escapeHTML(appState.pendingTopicName)}</strong>?
+          Your current practice progress will be cleared.
+        </p>
+
+        <div class="quit-modal-actions">
+          <button
+            class="secondary-button"
+            type="button"
+            data-action="cancel-topic-change"
+          >
+            Cancel
+          </button>
+
+          <button
+            class="quit-confirm-button"
+            type="button"
+            data-action="confirm-topic-change"
+          >
+            Change topic
+          </button>
+        </div>
+      </section>
+    </div>
+  `;
+}
+
+function renderLoadingPage() {
+  return `
+    <main class="app-shell loading-page-shell">
+      <section class="loading-card" role="status" aria-live="polite">
+        <div class="loading-spinner" aria-hidden="true"></div>
+        <h1 class="loading-title">${escapeHTML(appState.loadingMessage)}</h1>
+        <p class="loading-description">
+          Please wait while MAXI prepares your questions.
+        </p>
+      </section>
+    </main>
+  `;
+}
+
 function renderApp() {
   const root = document.getElementById("root");
+
+  if (appState.isLoadingQuestions) {
+    root.innerHTML = renderLoadingPage();
+    return;
+  }
 
   if (appState.currentState === STATES.RESULT) {
     root.innerHTML = `
@@ -86,12 +250,15 @@ function renderApp() {
   root.innerHTML = `
     <main class="app-shell">
       ${renderQuitButton()}
+  
       <div class="app-grid">
         ${renderTopicPanel()}
         ${renderProgress()}
         ${renderCurrentState()}
       </div>
+  
       ${appState.quitModalOpen ? renderQuitModal() : ""}
+      ${appState.topicChangeModalOpen ? renderTopicChangeModal() : ""}
     </main>
   `;
 }
@@ -102,6 +269,70 @@ function renderQuitButton() {
       Quit
     </button>
   `;
+}
+
+function handleTopicSelection(topicId, topicName) {
+  if (!topicId || !topicName) {
+    return;
+  }
+
+  if (topicId === appState.selectedTopicId) {
+    return;
+  }
+
+  appState.pendingTopicId = topicId;
+  appState.pendingTopicName = topicName;
+  appState.topicChangeModalOpen = true;
+
+  renderApp();
+}
+
+function closeTopicChangeModal() {
+  appState.topicChangeModalOpen = false;
+  appState.pendingTopicId = "";
+  appState.pendingTopicName = "";
+
+  renderApp();
+}
+
+async function confirmTopicChange() {
+  if (
+    !appState.pendingTopicId ||
+    !appState.pendingTopicName ||
+    appState.isLoadingQuestions
+  ) {
+    return;
+  }
+
+  const nextTopicId = appState.pendingTopicId;
+  const nextTopicName = appState.pendingTopicName;
+
+  appState.topicChangeModalOpen = false;
+  appState.pendingTopicId = "";
+  appState.pendingTopicName = "";
+
+  appState.isLoadingQuestions = true;
+  appState.loadingMessage = `Loading ${nextTopicName}...`;
+  renderApp();
+
+  try {
+    const newQuestions = await loadQuestionsFromBackend(nextTopicName);
+
+    appState.selectedTopicId = nextTopicId;
+    appState.selectedTopicName = nextTopicName;
+    appState.questions = newQuestions;
+
+    resetPracticeForNewTopic();
+    updateTopicInURL(nextTopicId);
+  } catch (error) {
+    console.error("Failed to change topic:", error);
+
+    appState.errorMessage =
+      `Unable to load questions for ${nextTopicName}. Please try again.`;
+  } finally {
+    appState.isLoadingQuestions = false;
+    renderApp();
+  }
 }
 
 function renderQuitModal() {
@@ -129,29 +360,74 @@ function renderCurrentState() {
 
 function renderTopicPanel() {
   const topicTree = appState.topicTree;
-  const physicsTopic = topicTree.children[0];
-  const subtopics = physicsTopic.children;
+  const subjectBranch = topicTree.children[0];
+  const subtopics = subjectBranch.children;
   const isCollapsed = CONFIG.topicPanelCollapsed;
 
   return `
     <aside class="topic-panel${isCollapsed ? " is-collapsed" : ""}">
-      <button class="topic-toggle" type="button" data-action="toggle-topic" aria-expanded="${String(!isCollapsed)}">
-        ${isCollapsed ? "Topic: " + escapeHTML(physicsTopic.level2) : escapeHTML(topicTree.level1)}
+      <button
+        class="topic-toggle"
+        type="button"
+        data-action="toggle-topic"
+        aria-expanded="${String(!isCollapsed)}"
+      >
+        ${
+          isCollapsed
+            ? "Topic: " + escapeHTML(subjectBranch.level2)
+            : escapeHTML(topicTree.level1)
+        }
       </button>
-      ${isCollapsed ? "" : `
-        <div class="topic-tree">
-          <button class="topic-node topic-branch" type="button" data-action="toggle-topic-branch" aria-expanded="${String(CONFIG.topicBranchExpanded)}">
-            ${escapeHTML(physicsTopic.level2)}
-          </button>
-          ${CONFIG.topicBranchExpanded ? `
-            <div class="topic-children">
-              ${subtopics.map((subtopic) => `
-                <div class="topic-node topic-leaf">${escapeHTML(subtopic.level3)}</div>
-              `).join("")}
+
+      ${
+        isCollapsed
+          ? ""
+          : `
+            <div class="topic-tree">
+              <button
+                class="topic-node topic-branch"
+                type="button"
+                data-action="toggle-topic-branch"
+                aria-expanded="${String(CONFIG.topicBranchExpanded)}"
+              >
+                <span>${escapeHTML(subjectBranch.level2)}</span>
+                <span class="topic-branch-level">
+                  ${escapeHTML(subjectBranch.levelName)}
+                </span>
+              </button>
+
+              ${
+                CONFIG.topicBranchExpanded
+                  ? `
+                    <div class="topic-children">
+                      ${subtopics
+                        .map((subtopic) => {
+                          const isSelected =
+                            subtopic.id === appState.selectedTopicId;
+
+                         return `
+                          <button
+                            class="topic-node topic-leaf${
+                              isSelected ? " is-selected-topic" : ""
+                            }"
+                            type="button"
+                            data-action="select-topic"
+                            data-topic-id="${escapeAttribute(subtopic.id)}"
+                            data-topic-name="${escapeAttribute(subtopic.level3)}"
+                            aria-current="${isSelected ? "true" : "false"}"
+                          >
+                            ${escapeHTML(subtopic.level3)}
+                          </button>
+                        `;
+                        })
+                        .join("")}
+                    </div>
+                  `
+                  : ""
+              }
             </div>
-          ` : ""}
-        </div>
-      `}
+          `
+      }
     </aside>
   `;
 }
@@ -250,7 +526,9 @@ function getModeIndicatorText() {
 
 function renderResult() {
   const scoreText = appState.selectedMode === "short"
-    ? `${appState.score} / ${appState.totalMarksAvailable}`
+    ? `${appState.totalMarksAvailable > 0
+        ? Math.round((appState.score / appState.totalMarksAvailable) * 100)
+        : 0}%`
     : `${appState.score} / ${appState.questions.length}`;
 
   return `
@@ -262,14 +540,43 @@ function renderResult() {
   `;
 }
 
+function resetPracticeForNewTopic() {
+  appState.currentState = STATES.QUESTION;
+  appState.currentQuestionIndex = 0;
+  appState.answers = [];
+  appState.score = 0;
+  appState.totalMarksAvailable = 0;
+  appState.isSubmitting = false;
+  appState.errorMessage = "";
+  appState.attemptId = crypto.randomUUID();
+  appState.resultSnapshot = [];
+}
+
+function updateTopicInURL(topicId) {
+  const params = new URLSearchParams(window.location.search);
+
+  params.set("subject", appState.selectedSubjectId);
+  params.set("level", appState.selectedLevelId);
+  params.set("topic", topicId);
+  params.set("mode", appState.selectedMode);
+
+  const newURL = `${window.location.pathname}?${params.toString()}`;
+
+  window.history.replaceState({}, "", newURL);
+}
+
 function getCurrentTopic() {
-  const firstBranch = appState.topicTree.children[0];
-  const firstLeaf = firstBranch.children[0];
+  const subjectBranch = appState.topicTree.children[0];
+
+  const selectedLeaf =
+    subjectBranch.children.find((topic) => {
+      return topic.id === appState.selectedTopicId;
+    }) || subjectBranch.children[0];
 
   return {
     level1: appState.topicTree.level1,
-    level2: firstBranch.level2,
-    level3: firstLeaf.level3
+    level2: subjectBranch.level2,
+    level3: selectedLeaf?.level3 || ""
   };
 }
 
@@ -314,6 +621,11 @@ function handleRootClick(event) {
     return;
   }
 
+  if (event.target.dataset.action === "topic-modal-overlay") {
+    closeTopicChangeModal();
+    return;
+  }
+
   const actionElement = event.target.closest("[data-action]");
 
   if (!actionElement) {
@@ -330,6 +642,20 @@ function handleRootClick(event) {
   if (action === "toggle-topic-branch") {
     CONFIG.topicBranchExpanded = !CONFIG.topicBranchExpanded;
     renderApp();
+  }
+  if (action === "select-topic") {
+    handleTopicSelection(
+      actionElement.dataset.topicId,
+      actionElement.dataset.topicName
+    );
+  }
+
+  if (action === "cancel-topic-change") {
+    closeTopicChangeModal();
+  }
+
+  if (action === "confirm-topic-change") {
+    confirmTopicChange();
   }
 
   if (action === "select-quiz") {
@@ -370,8 +696,17 @@ function handleRootInput(event) {
 }
 
 function handleDocumentKeydown(event) {
-  if (event.key === "Escape" && appState.quitModalOpen) {
+  if (event.key !== "Escape") {
+    return;
+  }
+
+  if (appState.quitModalOpen) {
     closeQuitModal();
+    return;
+  }
+
+  if (appState.topicChangeModalOpen) {
+    closeTopicChangeModal();
   }
 }
 
@@ -617,7 +952,7 @@ function handleConfirmQuit() {
 
   if (shouldQuit) {
     // TODO: connect this to the mode selection page later
-    window.location.href = CONFIG.modeSelectionPath;
+    window.location.href = CONFIG.homePagePath;
   }
 }
 
@@ -674,22 +1009,40 @@ async function getAIExplanationFromAPI() {}
 
 async function init() {
   try {
-    // test
-    console.log("MAXI Question UI version: v0.6.2-terminal-check-1");
+    console.log("MAXI Question UI version: v0.6.3-topic-switch");
 
     console.log("Attempt ID:", appState.attemptId);
 
+    appState.isLoadingQuestions = true;
+    appState.loadingMessage = "Loading your practice...";
+    renderApp();
+
     await initializeQuestions();
+
+    appState.isLoadingQuestions = false;
     renderApp();
   } catch (error) {
     console.error("Failed to initialise MAXI Question Part:", error);
 
+    appState.isLoadingQuestions = false;
+
     const root = document.getElementById("root");
+
     root.innerHTML = `
       <main class="app-shell">
         <section class="exam-card">
           <h1 class="prompt">Unable to load questions</h1>
-          <p>Please make sure the backend server is running at ${escapeHTML(CONFIG.mockBackendURL)}.</p>
+          <p>
+            MAXI could not find valid questions for the selected topic.
+            Please return to the home page and choose another topic.
+          </p>
+          <button
+            class="primary-button"
+            type="button"
+            onclick="window.location.href='${escapeAttribute(CONFIG.homePagePath)}'"
+          >
+            Return home
+          </button>
         </section>
       </main>
     `;

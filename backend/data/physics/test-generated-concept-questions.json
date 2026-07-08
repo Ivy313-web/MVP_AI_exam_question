@@ -1,0 +1,139 @@
+[
+  {
+    "forces and newton's laws": [
+      {
+        "topic": {
+          "level1": "Forces and Motion",
+          "level2": "Physics",
+          "level3": "Forces and Newton's Laws"
+        },
+        "prompt": "A car is traveling at a constant velocity. What can be said about the resultant force acting on the car?",
+        "quizOptions": [
+          "The resultant force is in the direction of motion",
+          "The resultant force is zero",
+          "The resultant force is opposite to the direction of motion",
+          "The resultant force is increasing"
+        ],
+        "quizCorrectAnswer": "The resultant force is zero",
+        "shortAcceptedAnswers": [],
+        "markScheme": [
+          {
+            "point": "The resultant force acting on the car is zero.",
+            "marks": 1
+          }
+        ],
+        "marks": 1,
+        "workedSolution": "When an object is traveling at a constant velocity, the resultant force acting on it is zero.",
+        "id": "test_gen_concept_forces_and_newton_s_laws_q1"
+      },
+      {
+        "topic": {
+          "level1": "Forces and Motion",
+          "level2": "Physics",
+          "level3": "Forces and Newton's Laws"
+        },
+        "prompt": "State the condition under which force is directly proportional to acceleration",
+        "quizOptions": [
+          "When mass is decreasing",
+          "When mass is constant",
+          "When mass is increasing",
+          "When velocity is constant"
+        ],
+        "quizCorrectAnswer": "When mass is constant",
+        "shortAcceptedAnswers": [],
+        "markScheme": [
+          {
+            "point": "For force to be directly proportional to acceleration, mass must be constant.",
+            "marks": 1
+          }
+        ],
+        "marks": 1,
+        "workedSolution": "For force to be directly proportional to acceleration, mass must be constant.",
+        "id": "test_gen_concept_forces_and_newton_s_laws_q2"
+      },
+      {
+        "topic": {
+          "level1": "Forces and Motion",
+          "level2": "Physics",
+          "level3": "Forces and Newton's Laws"
+        },
+        "prompt": "Explain the effect of air resistance on the motion of an object",
+        "quizOptions": [
+          "Air resistance causes an object to accelerate",
+          "Air resistance has no effect on the motion of an object",
+          "Air resistance opposes motion through air",
+          "Air resistance increases the velocity of an object"
+        ],
+        "quizCorrectAnswer": "Air resistance opposes motion through air",
+        "shortAcceptedAnswers": [],
+        "markScheme": [
+          {
+            "point": "Air resistance is a drag that opposes motion through air.",
+            "marks": 1
+          }
+        ],
+        "marks": 1,
+        "workedSolution": "Air resistance is a drag that opposes motion through air.",
+        "id": "test_gen_concept_forces_and_newton_s_laws_q3"
+      },
+      {
+        "topic": {
+          "level1": "Forces and Motion",
+          "level2": "Physics",
+          "level3": "Forces and Newton's Laws"
+        },
+        "prompt": "Define the term 'resultant force' and explain its relationship to acceleration",
+        "quizOptions": [
+          "Resultant force is the vector sum of forces and causes deceleration",
+          "Resultant force is the vector sum of forces and causes acceleration",
+          "Resultant force is the scalar sum of forces and causes deceleration",
+          "Resultant force is the scalar sum of forces and causes acceleration"
+        ],
+        "quizCorrectAnswer": "Resultant force is the vector sum of forces and causes acceleration",
+        "shortAcceptedAnswers": [],
+        "markScheme": [
+          {
+            "point": "The resultant force is the vector sum of forces acting on an object.",
+            "marks": 1
+          },
+          {
+            "point": "The resultant force causes acceleration in its direction.",
+            "marks": 1
+          }
+        ],
+        "marks": 2,
+        "workedSolution": "The resultant force is the vector sum of forces acting on an object and it causes acceleration in its direction.",
+        "id": "test_gen_concept_forces_and_newton_s_laws_q4"
+      },
+      {
+        "topic": {
+          "level1": "Forces and Motion",
+          "level2": "Physics",
+          "level3": "Forces and Newton's Laws"
+        },
+        "prompt": "Explain how the force of friction affects the motion of an object",
+        "quizOptions": [
+          "Friction acts between surfaces in contact and causes motion",
+          "Friction acts between surfaces in contact and opposes relative motion",
+          "Friction acts between surfaces not in contact and opposes relative motion",
+          "Friction acts between surfaces not in contact and causes motion"
+        ],
+        "quizCorrectAnswer": "Friction acts between surfaces in contact and opposes relative motion",
+        "shortAcceptedAnswers": [],
+        "markScheme": [
+          {
+            "point": "Friction acts between surfaces in contact.",
+            "marks": 1
+          },
+          {
+            "point": "Friction opposes relative motion or the tendency of relative motion.",
+            "marks": 1
+          }
+        ],
+        "marks": 2,
+        "workedSolution": "Friction acts between surfaces in contact and opposes relative motion or the tendency of relative motion.",
+        "id": "test_gen_concept_forces_and_newton_s_laws_q5"
+      }
+    ]
+  }
+]

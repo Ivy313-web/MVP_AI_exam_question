@@ -21,165 +21,194 @@ const CONFIG = {
   topic: "Forces and Newton's Laws",
   level1: "Forces and Motion",
   formulaType: "F_MA",
+  promptFile: path.join(
+  __dirname,
+    "../subjects/physics/physics-calculation-prompt.json"
+  ),
+
+  validatorFile: path.join(
+    __dirname,
+    "../subjects/physics/physics-calculation-validator.json"
+  ),
   numberOfQuestionsWanted: 5,
-  maxGenerationAttempts: 3,
+  candidatePoolSize: 12,
+  maxGenerationAttempts: 4,
   draftScoreThreshold: 6,
   finalScoreThreshold: 8,
   outputFile: path.join(__dirname, "../data/generated-calculation-questions.json")
 };
 
-function buildCalculationGenerationPrompt(numberOfQuestions) {
-  return `
-Create ${numberOfQuestions} A-level Physics calculation questions for MAXI.
+function normaliseText(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+}
 
-Topic:
-- ${CONFIG.topic}
-- Use only F = ma
-- Return only valid JSON. No markdown.
+function loadJsonFile(filePath) {
+  if (!fs.existsSync(filePath)) {
+    throw new Error(
+      `Configuration file does not exist: ${filePath}`
+    );
+  }
 
-Allowed unknowns:
-- forceN: given massKg and accelerationMs2
-- accelerationMs2: given forceN and massKg
-- massKg: given forceN and accelerationMs2
+  const rawText = fs.readFileSync(
+    filePath,
+    "utf8"
+  );
 
-Rules:
-- Use realistic positive values.
-- Use simple varied contexts: box, trolley, crate, model car, cyclist.
-- Include a mix of unknowns where possible.
-- Do not use the same unknown type more than twice in one batch.
-- Avoid repeated final answers.
-- Prompt must include values and units clearly.
-- quizOptions must contain exactly 4 answers with units.
-- quizCorrectAnswer must exactly match the correct quiz option.
-- Only one quiz option may be numerically correct.
-- workedSolution must show formula, substitution, and final answer.
-- marks should be 2.
-- markScheme must have two 1-mark points:
-  1. Uses F = ma.
-  2. Substitutes correctly and gives the correct answer with unit.
+  if (!rawText.trim()) {
+    throw new Error(
+      `Configuration file is empty: ${filePath}`
+    );
+  }
 
-Draft scoring:
-- Give draftQualityScore from 0 to 10.
-- Give 8+ only if the scenario is clear, values are realistic, answer is correct, and quiz options are good.
-- Include draftQualityIssues.
+  return JSON.parse(rawText);
+}
 
-Return this exact JSON:
-{
-  "questions": [
-    {
-      "id": "draft_calc_q1",
-      "questionType": "calculation",
-      "formulaType": "F_MA",
-      "topic": {
-        "level1": "${CONFIG.level1}",
-        "level2": "${CONFIG.subject}",
-        "level3": "${CONFIG.topic}"
-      },
-      "prompt": "A 2 kg object accelerates at 3 m/s². Calculate the resultant force acting on the object.",
-      "givenValues": {
-        "massKg": 2,
-        "accelerationMs2": 3,
-        "forceN": null
-      },
-      "unknown": "forceN",
-      "quizOptions": ["6 N", "1.5 N", "5 N", "9 N"],
-      "quizCorrectAnswer": "6 N",
-      "answer": {
-        "value": 6,
-        "unit": "N"
-      },
-      "shortAcceptedAnswers": [],
-      "markScheme": [
-        {
-          "point": "Uses F = ma.",
-          "marks": 1
-        },
-        {
-          "point": "Substitutes the values correctly and gives the correct answer with unit.",
-          "marks": 1
+function findCalculationConfig(
+  configEntries,
+  requestedTopic,
+  requestedFormulaType,
+  configLabel
+) {
+  if (!Array.isArray(configEntries)) {
+    throw new Error(
+      `${configLabel} configuration must be an array.`
+    );
+  }
+
+  const requestedTopicKey =
+    normaliseText(requestedTopic);
+
+  for (const topicEntry of configEntries) {
+    if (
+      !topicEntry ||
+      typeof topicEntry !== "object" ||
+      Array.isArray(topicEntry)
+    ) {
+      continue;
+    }
+
+    const matchingTopic =
+      Object.entries(topicEntry).find(
+        ([storedTopic]) => {
+          return (
+            normaliseText(storedTopic) ===
+            requestedTopicKey
+          );
         }
-      ],
-      "marks": 2,
-      "workedSolution": "Use F = ma. F = 2 × 3 = 6 N.",
-      "draftQualityScore": 8,
-      "draftQualityIssues": []
+      );
+
+    if (!matchingTopic) {
+      continue;
     }
-  ]
+
+    const [, formulaConfigs] =
+      matchingTopic;
+
+    const formulaConfig =
+      formulaConfigs?.[requestedFormulaType];
+
+    if (
+      !formulaConfig ||
+      typeof formulaConfig !== "object" ||
+      Array.isArray(formulaConfig)
+    ) {
+      throw new Error(
+        `No ${configLabel} configuration found for formula type: ${requestedFormulaType}`
+      );
+    }
+
+    return formulaConfig;
+  }
+
+  throw new Error(
+    `No ${configLabel} configuration found for topic: ${requestedTopic}`
+  );
 }
-`;
+
+function renderPromptTemplate(
+  templateLines,
+  variables
+) {
+  if (!Array.isArray(templateLines)) {
+    throw new Error(
+      "Prompt template must be an array of strings."
+    );
+  }
+
+  let renderedPrompt =
+    templateLines.join("\n");
+
+  Object.entries(variables).forEach(
+    ([variableName, value]) => {
+      renderedPrompt =
+        renderedPrompt.replaceAll(
+          `{{${variableName}}}`,
+          String(value)
+        );
+    }
+  );
+
+  return renderedPrompt;
 }
 
-function buildCalculationOptimisationPrompt(questions) {
-  return `
-Optimise these A-level Physics calculation questions for MAXI.
+const calculationPromptEntries =
+  loadJsonFile(CONFIG.promptFile);
 
-Return only valid JSON. No markdown.
-Keep every question as formulaType "F_MA" using only F = ma.
+const calculationValidatorEntries =
+  loadJsonFile(CONFIG.validatorFile);
 
-Optimisation rules:
-- Fix unclear wording, unrealistic values, wrong answers, wrong units, and weak quiz options.
-- Keep prompt, givenValues, unknown, answer, quizCorrectAnswer, workedSolution, and markScheme fully consistent.
-- Preserve a mix of unknowns where possible: forceN, accelerationMs2, massKg.
-- Do not turn every question into forceN or accelerationMs2.
-- Use exactly 4 quizOptions with units.
-- quizCorrectAnswer must exactly match the correct option.
-- Only one quiz option may be numerically correct.
-- Wrong options should be plausible but clearly wrong.
-- workedSolution must show formula, substitution, and final answer.
-- marks should be 2 with two 1-mark markScheme points.
-- Give finalQualityScore from 0 to 10.
-- Give 8+ only if the question is clear, physically reasonable, numerically correct, and stable for marking.
+const calculationPromptConfig =
+  findCalculationConfig(
+    calculationPromptEntries,
+    CONFIG.topic,
+    CONFIG.formulaType,
+    "calculation prompt"
+  );
 
-Return this exact JSON:
-{
-  "optimisedQuestions": [
+const calculationValidatorConfig =
+  findCalculationConfig(
+    calculationValidatorEntries,
+    CONFIG.topic,
+    CONFIG.formulaType,
+    "calculation validator"
+  );
+
+function buildCalculationGenerationPrompt(
+  numberOfQuestions
+) {
+  return renderPromptTemplate(
+    calculationPromptConfig
+      .generationPromptTemplate,
     {
-      "originalId": "draft_calc_q1",
-      "finalQualityScore": 9,
-      "changesMade": ["Improved wording", "Fixed quiz options"],
-      "question": {
-        "id": "draft_calc_q1",
-        "questionType": "calculation",
-        "formulaType": "F_MA",
-        "topic": {
-          "level1": "${CONFIG.level1}",
-          "level2": "${CONFIG.subject}",
-          "level3": "${CONFIG.topic}"
-        },
-        "prompt": "A 2 kg object accelerates at 3 m/s². Calculate the resultant force acting on the object.",
-        "givenValues": {
-          "massKg": 2,
-          "accelerationMs2": 3,
-          "forceN": null
-        },
-        "unknown": "forceN",
-        "quizOptions": ["6 N", "1.5 N", "5 N", "9 N"],
-        "quizCorrectAnswer": "6 N",
-        "answer": {
-          "value": 6,
-          "unit": "N"
-        },
-        "shortAcceptedAnswers": [],
-        "markScheme": [
-          {
-            "point": "Uses F = ma.",
-            "marks": 1
-          },
-          {
-            "point": "Substitutes the values correctly and gives the correct answer with unit.",
-            "marks": 1
-          }
-        ],
-        "marks": 2,
-        "workedSolution": "Use F = ma. F = 2 × 3 = 6 N."
-      }
+      numberOfQuestions,
+      topic: CONFIG.topic,
+      level1: CONFIG.level1,
+      subject: CONFIG.subject
     }
-  ]
+  );
 }
 
-Questions:
-${JSON.stringify(questions, null, 2)}
-`;
+function buildCalculationOptimisationPrompt(
+  questions
+) {
+  return renderPromptTemplate(
+    calculationPromptConfig
+      .optimisationPromptTemplate,
+    {
+      topic: CONFIG.topic,
+      level1: CONFIG.level1,
+      subject: CONFIG.subject,
+      questionsJson:
+        JSON.stringify(
+          questions,
+          null,
+          2
+        )
+    }
+  );
 }
 
 async function callGroq(prompt) {
@@ -241,15 +270,98 @@ function normaliseAnswerText(value) {
     .replace(/\s+/g, " ");
 }
 
+function escapeRegex(value) {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function hasValueWithUnit(text, value, unit) {
+  const roundedValue = roundToTwoDp(value);
+  const valuePattern = escapeRegex(String(roundedValue));
+
+  let unitPattern;
+
+  if (unit === "N") {
+    unitPattern = "n|newton|newtons";
+  } else if (unit === "kg") {
+    unitPattern = "kg|kilogram|kilograms";
+  } else if (unit === "m/s²") {
+    unitPattern = "m\\/s²|m\\/s\\^2|m s-2|m s\\^-2|metres per second squared|meters per second squared";
+  } else {
+    unitPattern = escapeRegex(unit);
+  }
+
+  const regex = new RegExp(`(^|[^0-9.])${valuePattern}\\s*(${unitPattern})([^a-zA-Z]|$)`, "i");
+
+  return regex.test(text);
+}
+
+function promptRevealsUnknownAnswer(question, expected) {
+  const prompt = question?.prompt || "";
+
+  if (!expected) {
+    return false;
+  }
+
+  return hasValueWithUnit(prompt, expected.value, expected.unit);
+}
+
+function promptIncludesKnownGivenValues(question) {
+  const prompt = question?.prompt || "";
+  const givenValues = question?.givenValues || {};
+  const errors = [];
+
+  const knownValueChecks = [
+    {
+      key: "forceN",
+      unit: "N",
+      label: "force"
+    },
+    {
+      key: "massKg",
+      unit: "kg",
+      label: "mass"
+    },
+    {
+      key: "accelerationMs2",
+      unit: "m/s²",
+      label: "acceleration"
+    }
+  ];
+
+  knownValueChecks.forEach((item) => {
+    const value = givenValues[item.key];
+
+    if (value === null || value === undefined) {
+      return;
+    }
+
+    if (!Number.isFinite(Number(value))) {
+      return;
+    }
+
+    if (!hasValueWithUnit(prompt, Number(value), item.unit)) {
+      errors.push(`Prompt is missing known ${item.label} value: ${value} ${item.unit}.`);
+    }
+  });
+
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+}
+
 function formatExpectedAnswer(value, unit) {
   return `${roundToTwoDp(value)} ${unit}`;
 }
 
-function nearlyEqual(a, b, tolerance = 0.01) {
-  return Math.abs(Number(a) - Number(b)) <= tolerance;
+function nearlyEqual(a, b, tolerance = calculationValidatorConfig.answerTolerance) {
+  return (Math.abs(Number(a) - Number(b)) <= tolerance);
 }
 
 function getExpectedCalculation(question) {
+  const answerUnits =
+  calculationValidatorConfig.answerUnits;
+
   const mass = Number(question?.givenValues?.massKg);
   const acceleration = Number(question?.givenValues?.accelerationMs2);
   const force = Number(question?.givenValues?.forceN);
@@ -261,7 +373,7 @@ function getExpectedCalculation(question) {
 
     return {
       value: mass * acceleration,
-      unit: "N"
+      unit: answerUnits.forceN
     };
   }
 
@@ -272,7 +384,7 @@ function getExpectedCalculation(question) {
 
     return {
       value: force / mass,
-      unit: "m/s²"
+      unit: answerUnits.accelerationMs2
     };
   }
 
@@ -283,7 +395,7 @@ function getExpectedCalculation(question) {
 
     return {
       value: force / acceleration,
-      unit: "kg"
+      unit: answerUnits.massKg
     };
   }
 
@@ -293,6 +405,16 @@ function getExpectedCalculation(question) {
 function validateCalculationDraft(question) {
   const errors = [];
 
+  const {
+    questionType,
+    formulaType,
+    allowedUnknowns,
+    requiredGivenValueKeys,
+    quizOptionCount,
+    minimumMarks,
+    maximumMarks
+  } = calculationValidatorConfig;
+
   if (!question || typeof question !== "object") {
     return {
       isValid: false,
@@ -301,8 +423,8 @@ function validateCalculationDraft(question) {
   }
 
   if (!question.id) errors.push("Missing id.");
-  if (question.questionType !== "calculation") errors.push("questionType must be calculation.");
-  if (question.formulaType !== "F_MA") errors.push("formulaType must be F_MA.");
+  if (question.questionType !== questionType) {errors.push(`questionType must be ${questionType}.`);}
+  if (question.formulaType !== formulaType) {errors.push(`formulaType must be ${formulaType}.`);}
 
   if (!question.prompt || typeof question.prompt !== "string") {
     errors.push("Missing prompt.");
@@ -312,8 +434,29 @@ function validateCalculationDraft(question) {
     errors.push("Missing givenValues.");
   }
 
-  if (!["forceN", "accelerationMs2", "massKg"].includes(question.unknown)) {
-    errors.push("unknown must be forceN, accelerationMs2, or massKg.");
+  if (!allowedUnknowns.includes(question.unknown)) {errors.push(`unknown must be one of: ${allowedUnknowns.join(", ")}.`);}
+  if (question.givenValues && allowedUnknowns.includes(question.unknown)) {
+    const requiredKeys = requiredGivenValueKeys;
+
+    requiredKeys.forEach((key) => {
+      if (!(key in question.givenValues)) {
+        errors.push(`givenValues is missing ${key}.`);
+      }
+    });
+
+    if (question.givenValues[question.unknown] !== null) {
+      errors.push(`givenValues.${question.unknown} must be null because it is the unknown.`);
+    }
+
+    requiredKeys
+      .filter((key) => key !== question.unknown)
+      .forEach((key) => {
+        const value = Number(question.givenValues[key]);
+
+        if (!Number.isFinite(value) || value <= 0) {
+          errors.push(`givenValues.${key} must be a positive number.`);
+        }
+      });
   }
 
   if (!Array.isArray(question.quizOptions) || question.quizOptions.length !== 4) {
@@ -340,8 +483,8 @@ function validateCalculationDraft(question) {
     errors.push("Missing markScheme.");
   }
 
-  if (!Number.isInteger(question.marks) || question.marks < 1 || question.marks > 4) {
-    errors.push("marks must be an integer from 1 to 4.");
+  if (!Number.isInteger(question.marks) || question.marks < minimumMarks || question.marks > maximumMarks) {
+    errors.push(`marks must be an integer from ${minimumMarks} to ${maximumMarks}.`);
   }
 
   if (!question.workedSolution || typeof question.workedSolution !== "string") {
@@ -372,7 +515,14 @@ function validateCalculationAnswer(question) {
       errors
     };
   }
+  if (promptRevealsUnknownAnswer(question, expected)) {
+    errors.push("Prompt appears to reveal the unknown answer.");
+  }
+  const knownValuePromptCheck = promptIncludesKnownGivenValues(question);
 
+  if (!knownValuePromptCheck.isValid) {
+    errors.push(...knownValuePromptCheck.errors);
+  }
   const answerValue = Number(question?.answer?.value);
   const answerUnit = question?.answer?.unit;
 
@@ -412,9 +562,16 @@ function validateCalculationAnswer(question) {
     errors.push("marks must equal the number of markScheme points.");
   }
 
-  const allMarkPointsOneMark = question.markScheme.every((point) => {
-    return point && point.marks === 1;
-  });
+  const expectedMarkPointMarks =
+    calculationValidatorConfig.markPointMarks;
+
+  const allMarkPointsOneMark =
+    question.markScheme.every((point) => {
+      return (
+        point &&
+        point.marks === expectedMarkPointMarks
+      );
+    });
 
   if (!allMarkPointsOneMark) {
     errors.push("Each markScheme point must be worth exactly 1 mark.");
@@ -487,6 +644,57 @@ function removeDuplicateCalculationQuestions(questions) {
   });
 }
 
+function selectBalancedCalculationQuestions(questions, limit) {
+  const targetByUnknown =
+    calculationValidatorConfig.targetUnknownMix;
+
+  const selected = [];
+  const selectedIds = new Set();
+
+  Object.entries(targetByUnknown).forEach(([unknown, targetCount]) => {
+    const matchingQuestions = questions.filter((question) => {
+      return question.unknown === unknown;
+    });
+
+    matchingQuestions.slice(0, targetCount).forEach((question) => {
+      selected.push(question);
+      selectedIds.add(question.id);
+    });
+  });
+
+  if (selected.length < limit) {
+    const remainingQuestions = questions.filter((question) => {
+      return !selectedIds.has(question.id);
+    });
+
+    selected.push(...remainingQuestions.slice(0, limit - selected.length));
+  }
+
+  return selected.slice(0, limit);
+}
+
+function countByUnknown(questions) {
+  return questions.reduce((counts, question) => {
+    const unknown = question?.unknown || "unknown";
+    counts[unknown] = (counts[unknown] || 0) + 1;
+    return counts;
+  }, {});
+}
+
+function hasMinimumUnknownMix(questions) {
+  const counts = countByUnknown(questions);
+
+  return Object.entries(
+    calculationValidatorConfig
+      .minimumUnknownMix
+  ).every(([unknown, requiredCount]) => {
+    return (
+      (counts[unknown] || 0) >=
+      requiredCount
+    );
+  });
+}
+
 function giveFinalIds(questions, existingQuestions) {
   const existingCount = existingQuestions.length;
 
@@ -507,16 +715,21 @@ async function collectDraftQuestions() {
   const rejectedBeforeAnswerCheck = [];
 
   for (let attempt = 1; attempt <= CONFIG.maxGenerationAttempts; attempt += 1) {
-    const remainingNeeded = CONFIG.numberOfQuestionsWanted - draftQuestions.length;
-
-    if (remainingNeeded <= 0) {
+    if (draftQuestions.length >= CONFIG.candidatePoolSize) {
       break;
     }
 
-    console.log(`\nGeneration attempt ${attempt}/${CONFIG.maxGenerationAttempts}`);
-    console.log(`Need ${remainingNeeded} more draft calculation question(s).`);
+    const remainingCandidateSlots = CONFIG.candidatePoolSize - draftQuestions.length;
+    const questionsToGenerate = Math.min(
+      remainingCandidateSlots + 2,
+      CONFIG.numberOfQuestionsWanted + 3
+    );
 
-    const generatedQuestions = await generateCalculationQuestions(remainingNeeded + 2);
+    console.log(`\nGeneration attempt ${attempt}/${CONFIG.maxGenerationAttempts}`);
+    console.log(`Current draft candidate pool: ${draftQuestions.length}/${CONFIG.candidatePoolSize}`);
+    console.log(`Generating ${questionsToGenerate} draft calculation question(s).`);
+
+    const generatedQuestions = await generateCalculationQuestions(questionsToGenerate);
 
     generatedQuestions.forEach((question) => {
       const draftValidation = validateCalculationDraft(question);
@@ -548,7 +761,20 @@ async function collectDraftQuestions() {
     });
 
     draftQuestions = removeDuplicateQuestions(draftQuestions);
-    draftQuestions = draftQuestions.slice(0, CONFIG.numberOfQuestionsWanted);
+    draftQuestions = removeDuplicateCalculationQuestions(draftQuestions);
+
+    const unknownCounts = countByUnknown(draftQuestions);
+    console.log("Draft unknown counts:");
+    console.log(JSON.stringify(unknownCounts, null, 2));
+// Keep collecting until candidatePoolSize or maxGenerationAttempts.
+// Do not stop early just because the draft pool has a mix,
+// because answer validation may later reject one unknown type.
+//     if (
+//       draftQuestions.length >= CONFIG.numberOfQuestionsWanted &&
+//       hasMinimumUnknownMix(draftQuestions)
+//     ) {
+//       break;
+//     }
   }
 
   return {
@@ -651,8 +877,47 @@ async function runPipeline() {
 
   const existingAcceptedQuestions = loadExistingAcceptedQuestions();
 
+  const cleanedAcceptedQuestions = removeDuplicateCalculationQuestions(
+    removeDuplicateQuestions(acceptedQuestions)
+  );
+
+  const cleanedUnknownCounts = countByUnknown(cleanedAcceptedQuestions);
+
+  console.log("\nAccepted unknown counts before balancing:");
+  console.log(JSON.stringify(cleanedUnknownCounts, null, 2));
+
+  if (!hasMinimumUnknownMix(cleanedAcceptedQuestions)) {
+    console.log("\nCalculation question batch did not meet minimum unknown mix.");
+    console.log("Need at least one forceN, one accelerationMs2, and one massKg question.");
+    console.log("No new calculation questions were saved from this batch.");
+
+    const summary = {
+      requested: CONFIG.numberOfQuestionsWanted,
+      draftsPassingLocalQualityGate: draftQuestions.length,
+      draftsPassingAnswerCheck: answerCheckedQuestions.length,
+      acceptedAfterOptimisation: acceptedQuestions.length,
+      savedNewQuestions: 0,
+      totalSavedQuestions: existingAcceptedQuestions.length,
+      unknownCounts: cleanedUnknownCounts,
+      rejectedBeforeAnswerCheck,
+      rejectedByAnswerCheck,
+      rejectedAfterOptimisation,
+      savedTo: CONFIG.outputFile
+    };
+
+    console.log("\nFINAL SUMMARY:");
+    console.log(JSON.stringify(summary, null, 2));
+
+    return;
+  }
+
+  const balancedAcceptedQuestions = selectBalancedCalculationQuestions(
+    cleanedAcceptedQuestions,
+    CONFIG.numberOfQuestionsWanted
+  );
+
   const finalNewQuestions = giveFinalIds(
-    removeDuplicateCalculationQuestions(removeDuplicateQuestions(acceptedQuestions)),
+    balancedAcceptedQuestions,
     existingAcceptedQuestions
   );
   const allAcceptedQuestions = removeDuplicateQuestions([

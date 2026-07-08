@@ -60,308 +60,309 @@ function removeByQuestionId(list, questionId) {
   });
 }
 
-function loadQuestionsFromJsonFile(filePath) {
+function loadQuestionBankFromJsonFile(filePath) {
   try {
     if (!fs.existsSync(filePath)) {
+      console.warn(`Question bank file does not exist: ${filePath}`);
       return [];
     }
 
     const rawText = fs.readFileSync(filePath, "utf8");
 
     if (!rawText.trim()) {
+      console.warn(`Question bank file is empty: ${filePath}`);
       return [];
     }
 
     const parsed = JSON.parse(rawText);
 
-    return Array.isArray(parsed) ? parsed : [];
+    if (!Array.isArray(parsed)) {
+      throw new Error(
+        "Question bank must be an array of topic objects."
+      );
+    }
+
+    const hasInvalidTopicEntry = parsed.some((topicEntry) => {
+      return (
+        !topicEntry ||
+        typeof topicEntry !== "object" ||
+        Array.isArray(topicEntry)
+      );
+    });
+
+    if (hasInvalidTopicEntry) {
+      throw new Error(
+        "Each question bank item must be an object whose key is a topic name and whose value is a question array."
+      );
+    }
+
+    return parsed;
   } catch (error) {
-    console.error(`Failed to load questions from ${filePath}:`, error.message);
+    console.error(
+      `Failed to load question bank from ${filePath}:`,
+      error.message
+    );
+
     return [];
   }
 }
+function normaliseTopicName(topicName) {
+  return String(topicName || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+}
 
-const generatedConceptQuestions = loadQuestionsFromJsonFile(
-  path.join(__dirname, "data", "generated-concept-questions.json")
+function getTopicQuestionsFromBank(
+  questionBankArray,
+  requestedTopicName,
+  questionType
+) {
+  const normalisedRequestedTopic =
+    normaliseTopicName(requestedTopicName);
+
+  if (
+    !normalisedRequestedTopic ||
+    !Array.isArray(questionBankArray)
+  ) {
+    return [];
+  }
+
+  for (const topicEntry of questionBankArray) {
+    const matchingEntry = Object.entries(topicEntry).find(
+      ([storedTopicName]) => {
+        return (
+          normaliseTopicName(storedTopicName) ===
+          normalisedRequestedTopic
+        );
+      }
+    );
+
+    if (!matchingEntry) {
+      continue;
+    }
+
+    const [storedTopicName, questions] = matchingEntry;
+
+    if (!Array.isArray(questions)) {
+      console.warn(
+        `Topic "${storedTopicName}" does not contain a question array.`
+      );
+
+      return [];
+    }
+
+    return questions.map((question) => {
+      return {
+        ...question,
+        questionType,
+        topicName: storedTopicName
+      };
+    });
+  }
+
+  return [];
+}
+
+function flattenQuestionBank(
+  questionBankArray,
+  questionType
+) {
+  if (!Array.isArray(questionBankArray)) {
+    return [];
+  }
+
+  return questionBankArray.flatMap((topicEntry) => {
+    if (
+      !topicEntry ||
+      typeof topicEntry !== "object" ||
+      Array.isArray(topicEntry)
+    ) {
+      return [];
+    }
+
+    return Object.entries(topicEntry).flatMap(
+      ([topicName, questions]) => {
+        if (!Array.isArray(questions)) {
+          console.warn(
+            `Topic "${topicName}" does not contain a question array.`
+          );
+
+          return [];
+        }
+
+        return questions.map((question) => {
+          return {
+            ...question,
+            questionType,
+            topicName
+          };
+        });
+      }
+    );
+  });
+}
+
+const approvedConceptQuestionBank = loadQuestionBankFromJsonFile(
+  path.join(
+    __dirname,
+    "data",
+    "physics",
+    "approved-concept-questions.json"
+  )
 );
 
-const generatedCalculationQuestions = loadQuestionsFromJsonFile(
-  path.join(__dirname, "data", "generated-calculation-questions.json")
+const generatedCalculationQuestionBank = loadQuestionBankFromJsonFile(
+  path.join(
+    __dirname,
+    "data",
+    "physics",
+    "generated-calculation-questions.json"
+  )
 );
 
-//QUESTION
+function countQuestionsInBank(questionBankArray) {
+  if (!Array.isArray(questionBankArray)) {
+    return 0;
+  }
 
-const questionBank = [
-  {
-  id: "q1",
-  topic: {
-    level1: "Topic",
-    level2: "Physics",
-    level3: "Projectile Motion"
-  },
-  prompt: "Which component of velocity remains constant in ideal projectile motion when air resistance is ignored?",
-  quizOptions: ["Horizontal velocity", "Vertical velocity", "Resultant velocity", "Terminal velocity"],
-  quizCorrectAnswer: "Horizontal velocity",
-  shortAcceptedAnswers: [
-    "horizontal velocity",
-    "horizontal component of velocity",
-    "x velocity"
-  ],
-  markScheme: [
-    {
-      point: "Identifies the horizontal component of velocity as the component that remains constant.",
-      marks: 1
-    }
-  ],
-  marks: 1
-  },
-  {
-  id: "q2",
-  topic: {
-    level1: "Topic",
-    level2: "Physics",
-    level3: "Projectile Motion"
-  },
-  prompt: "Explain the acceleration of a projectile near Earth's surface when air resistance is ignored.",
-  quizOptions: ["0 m/s^2", "9.8 m/s^2 downward", "9.8 m/s upward", "It changes with speed"],
-  quizCorrectAnswer: "9.8 m/s^2 downward",
-  shortAcceptedAnswers: [
-    "constant 9.8 m/s^2 downward",
-    "constant 9.8 metres per second squared downward",
-    "constant g downward",
-    "constant gravity downward"
-  ],
-  markScheme: [
-  {
-    point: "States the acceleration magnitude as 9.8 m/s^2 or g, including a valid acceleration unit or the symbol g.",
-    marks: 1
-  },
-  {
-    point: "States that the acceleration is downward or towards Earth.",
-    marks: 1
-  }
-],
-marks: 2
-  },
-  {
-  id: "q3",
-  topic: {
-    level1: "Topic",
-    level2: "Physics",
-    level3: "Projectile Motion"
-  },
-  prompt: "At the highest point of a projectile's path, what is its vertical velocity?",
-  quizOptions: ["Zero", "Maximum", "Equal to horizontal velocity", "Equal to acceleration"],
-  quizCorrectAnswer: "Zero",
-  shortAcceptedAnswers: [
-    "zero",
-    "0",
-    "0 m/s"
-  ],
-  markScheme: [
-    {
-      point: "States that the vertical velocity is zero at the highest point.",
-      marks: 1
-    }
-  ],
-  marks: 1
-  },
-  {
-    id: "q4",
-    topic: {
-      level1: "Topic",
-      level2: "Physics",
-      level3: "Projectile Motion"
+  return questionBankArray.reduce(
+    (bankTotal, topicEntry) => {
+      if (
+        !topicEntry ||
+        typeof topicEntry !== "object" ||
+        Array.isArray(topicEntry)
+      ) {
+        return bankTotal;
+      }
+
+      const topicTotal = Object.values(topicEntry).reduce(
+        (total, topicQuestions) => {
+          return total + (
+            Array.isArray(topicQuestions)
+              ? topicQuestions.length
+              : 0
+          );
+        },
+        0
+      );
+
+      return bankTotal + topicTotal;
     },
-    prompt: "What shape is the path of an ideal projectile?",
-    quizOptions: ["Parabola", "Circle", "Ellipse", "Straight line"],
-    quizCorrectAnswer: "Parabola",
-    shortAcceptedAnswers: ["parabola", "parabolic", "a parabola"],
-    marks: 1
-  },
-  {
-  id: "q5",
-  topic: {
-    level1: "Topic",
-    level2: "Physics",
-    level3: "Projectile Motion"
-  },
-  prompt: "Which force acts on an ideal projectile after launch when air resistance is ignored?",
-  quizOptions: ["Weight", "Thrust", "Drag", "Normal reaction"],
-  quizCorrectAnswer: "Weight",
-  shortAcceptedAnswers: [
-    "weight",
-    "gravity",
-    "gravitational force"
-  ],
-  markScheme: [
-    {
-      point: "States that weight, gravity, or the gravitational force acts on the projectile after launch.",
-      marks: 1
-    }
-  ],
-  marks: 1
-  },
-  {
-    id: "q6",
-    topic: {
-      level1: "Topic",
-      level2: "Physics",
-      level3: "Projectile Motion"
-    },
-    prompt: "For launch and landing at the same height, which launch angle gives maximum range?",
-    quizOptions: ["45 degrees", "30 degrees", "60 degrees", "90 degrees"],
-    quizCorrectAnswer: "45 degrees",
-    shortAcceptedAnswers: ["45 degrees", "45"],
-    marks: 1
-  },
-  {
-    id: "q7",
-    topic: {
-      level1: "Topic",
-      level2: "Physics",
-      level3: "Projectile Motion"
-    },
-    prompt: "If initial speed is fixed, what happens to time of flight when the vertical launch component increases?",
-    quizOptions: ["It increases", "It decreases", "It becomes zero", "It is unaffected"],
-    quizCorrectAnswer: "It increases",
-    shortAcceptedAnswers: ["it increases", "increases", "gets longer", "time of flight increases"],
-    marks: 1
-  },
-  {
-    id: "q8",
-    topic: {
-      level1: "Topic",
-      level2: "Physics",
-      level3: "Projectile Motion"
-    },
-    prompt: "Which initial velocity component determines the range when time of flight is known?",
-    quizOptions: ["Horizontal component", "Vertical component", "Acceleration component", "Resultant component"],
-    quizCorrectAnswer: "Horizontal component",
-    shortAcceptedAnswers: ["horizontal component", "horizontal velocity", "horizontal component of velocity"],
-    marks: 1
-  },
-  {
-  id: "q9",
-  topic: {
-    level1: "Topic",
-    level2: "Physics",
-    level3: "Projectile Motion"
-  },
-  prompt: "What assumption allows horizontal acceleration to be zero in projectile motion?",
-  quizOptions: ["No air resistance", "Constant mass", "Small launch angle", "High launch speed"],
-  quizCorrectAnswer: "No air resistance",
-  shortAcceptedAnswers: [
-    "no air resistance",
-    "air resistance ignored",
-    "ignore air resistance",
-    "no drag"
-  ],
-  markScheme: [
-    {
-      point: "States that air resistance is ignored or that there is no drag.",
-      marks: 1
-    }
-  ],
-  marks: 1
-  },
-  {
-    id: "q10",
-    topic: {
-      level1: "Topic",
-      level2: "Physics",
-      level3: "Projectile Motion"
-    },
-    prompt: "What is the horizontal displacement of a projectile commonly called?",
-    quizOptions: ["Range", "Height", "Amplitude", "Period"],
-    quizCorrectAnswer: "Range",
-    shortAcceptedAnswers: ["range", "horizontal range"],
-    marks: 1
-  },
-  {
-  id: "q11",
-  topic: {
-    level1: "Topic",
-    level2: "Physics",
-    level3: "Projectile Motion"
-  },
-  prompt: "Explain why the horizontal velocity of a projectile remains constant when air resistance is ignored.",
-  quizOptions: [
-    "There is no horizontal resultant force",
-    "Gravity acts horizontally",
-    "The vertical velocity is zero",
-    "The projectile has no weight"
-  ],
-  quizCorrectAnswer: "There is no horizontal resultant force",
-  shortAcceptedAnswers: [],
-  markScheme: [
-    {
-      point: "States that there is no horizontal resultant force acting on the projectile.",
-      marks: 1
-    },
-    {
-      point: "Explicitly links the lack of horizontal resultant force to zero horizontal acceleration or to the horizontal velocity remaining constant.",
-      marks: 1
-    }
-  ],
-  marks: 2
-  }
-];
+    0
+  );
+}
+
+console.log(
+  "Approved concept questions loaded:",
+  countQuestionsInBank(approvedConceptQuestionBank)
+);
+
+console.log(
+  "Generated calculation questions loaded:",
+  countQuestionsInBank(generatedCalculationQuestionBank)
+);
 
 //return to main
 function getPublicQuestion(question) {
+  const resolvedTopicName =
+    question.topicName ||
+    question?.topic?.level3 ||
+    null;
+
   const publicQuestion = {
     id: question.id,
-    questionType: question.questionType || "concept",
-    formulaType: question.formulaType || null,
-    topic: question.topic || null,
+    questionType:
+      question.questionType || "concept",
+    formulaType:
+      question.formulaType || null,
+    topicName: resolvedTopicName,
     prompt: question.prompt,
     quizOptions: question.quizOptions,
     marks: question.marks
   };
 
-  if (question.questionType === "calculation") {
-    publicQuestion.givenValues = question.givenValues || null;
-    publicQuestion.unknown = question.unknown || null;
+  if (
+    question.questionType === "calculation"
+  ) {
+    publicQuestion.givenValues =
+      question.givenValues || null;
+
+    publicQuestion.unknown =
+      question.unknown || null;
   }
 
   return publicQuestion;
 }
-
 // get question method
 app.get("/api/questions", (req, res) => {
   const requestedLimit = Number(req.query.limit);
-  const limit = Number.isInteger(requestedLimit) && requestedLimit > 0
-    ? requestedLimit
-    : 10;
+
+  const limit =
+    Number.isInteger(requestedLimit) &&
+    requestedLimit > 0
+      ? requestedLimit
+      : 10;
 
   const mix = req.query.mix || "random";
   const mode = req.query.mode || "short";
+  const requestedTopicName = String(
+    req.query.topic || ""
+  ).trim();
 
-  const allQuestions = getAllQuestions();
-  const modeFilteredQuestions = filterQuestionsForMode(allQuestions, mode);
+  if (!requestedTopicName) {
+    return res.status(400).json({
+      error: "Missing topic query parameter",
+      questions: []
+    });
+  }
+
+  const topicQuestions = getQuestionsForTopic(
+    requestedTopicName
+  );
+
+  const modeFilteredQuestions =
+    filterQuestionsForMode(
+      topicQuestions,
+      mode
+    );
 
   let selectedQuestions;
 
   if (mix === "half") {
-    selectedQuestions = selectHalfConceptHalfCalculationQuestions(modeFilteredQuestions, {
-      limit
-    });
+    selectedQuestions =
+      selectHalfConceptHalfCalculationQuestions(
+        modeFilteredQuestions,
+        {
+          limit
+        }
+      );
   } else {
-    selectedQuestions = selectPracticeQuestions(modeFilteredQuestions, {
-      limit
-    });
+    selectedQuestions =
+      selectPracticeQuestions(
+        modeFilteredQuestions,
+        {
+          limit
+        }
+      );
   }
 
-  const publicQuestions = selectedQuestions.map(getPublicQuestion);
+  const publicQuestions =
+    selectedQuestions.map(getPublicQuestion);
 
   res.json({
     questions: publicQuestions,
-    totalAvailable: allQuestions.length,
-    filteredAvailable: modeFilteredQuestions.length,
+    totalAvailable: getAllQuestions().length,
+    topicAvailable: topicQuestions.length,
+    filteredAvailable:
+      modeFilteredQuestions.length,
     selectedCount: publicQuestions.length,
     selection: {
-      strategy: mix === "half" ? "half_concept_half_calculation" : "random",
+      strategy:
+        mix === "half"
+          ? "half_concept_half_calculation"
+          : "random",
+      topic: requestedTopicName,
       mode,
       limit
     }
@@ -382,6 +383,31 @@ function isValidRuntimeGeneratedQuestion(question) {
   if (typeof question.prompt !== "string" || !question.prompt.trim()) {
     return false;
   }
+
+  if (!question.topic || typeof question.topic !== "object") {
+  return false;
+}
+
+if (
+  typeof question.topic.level1 !== "string" ||
+  !question.topic.level1.trim()
+) {
+  return false;
+}
+
+if (
+  typeof question.topic.level2 !== "string" ||
+  !question.topic.level2.trim()
+) {
+  return false;
+}
+
+if (
+  typeof question.topic.level3 !== "string" ||
+  !question.topic.level3.trim()
+) {
+  return false;
+}
 
   if (!Array.isArray(question.quizOptions) || question.quizOptions.length !== 4) {
     return false;
@@ -456,10 +482,50 @@ function filterRuntimeGeneratedQuestions(questions, label) {
 }
 
 function getAllQuestions() {
+  const conceptQuestions = flattenQuestionBank(
+    approvedConceptQuestionBank,
+    "concept"
+  );
+
+  const calculationQuestions = flattenQuestionBank(
+    generatedCalculationQuestionBank,
+    "calculation"
+  );
+
   return [
-    ...questionBank,
-    ...filterRuntimeGeneratedQuestions(generatedConceptQuestions, "concept"),
-    ...filterRuntimeGeneratedQuestions(generatedCalculationQuestions, "calculation")
+    ...filterRuntimeGeneratedQuestions(
+      conceptQuestions,
+      "approved concept"
+    ),
+    ...filterRuntimeGeneratedQuestions(
+      calculationQuestions,
+      "calculation"
+    )
+  ];
+}
+
+function getQuestionsForTopic(topicName) {
+  const conceptQuestions = getTopicQuestionsFromBank(
+    approvedConceptQuestionBank,
+    topicName,
+    "concept"
+  );
+
+  const calculationQuestions = getTopicQuestionsFromBank(
+    generatedCalculationQuestionBank,
+    topicName,
+    "calculation"
+  );
+
+  return [
+    ...filterRuntimeGeneratedQuestions(
+      conceptQuestions,
+      "approved concept"
+    ),
+    ...filterRuntimeGeneratedQuestions(
+      calculationQuestions,
+      "calculation"
+    )
   ];
 }
 
@@ -648,9 +714,12 @@ async function gradePendingAnswersWithGroq(pendingAIAnswers) {
 
     return {
       questionId: pendingAnswer.questionId,
+      questionType: question?.questionType || "concept",
+      formulaType: question?.formulaType || null,
       prompt: pendingAnswer.prompt || question?.prompt || "",
       userAnswer: pendingAnswer.userAnswer || "",
       correctAnswer: pendingAnswer.correctAnswer || question?.quizCorrectAnswer || "",
+      expectedAnswer: question?.answer || null,
       acceptedAnswers: question?.shortAcceptedAnswers || [],
       marksAvailable: pendingAnswer.marksAvailable || question?.marks || 1,
       markScheme: question?.markScheme || []
@@ -718,6 +787,8 @@ MARKING RULES:
 - Each markScheme point is worth the number of marks shown.
 - Award a markScheme point if the student clearly expresses the same scientific idea, even if the wording is different.
 - Accept common student wording such as "downwards" for "towards Earth", and "g" for "9.8 m/s^2".
+- For gravity or weight direction questions, accept "downward" or "downwards" as sufficient for the idea that gravity/weight acts vertically downward, unless the mark scheme specifically requires a distinction between vertical direction and a component along a surface.
+- For inclined plane questions, do not award the parallel-component mark unless the student clearly mentions a component of gravity along/parallel to the slope, or clearly states that the force/acceleration is down the slope.
 - If the answer is ambiguous but likely shows the correct idea, award the mark.
 - Be exam-style fair, not overly strict.
 - For each markScheme point, create one markBreakdown item.
@@ -810,6 +881,20 @@ function normalizeMarkBreakdown(markBreakdown, question) {
     };
   });
 }
+
+function answerShowsCalculationWorking(userAnswer) {
+  const text = normaliseAnswer(userAnswer);
+
+  return (
+    /f\s*=\s*m\s*a/.test(text) ||
+    /f\s*=\s*ma/.test(text) ||
+    /a\s*=\s*f\s*\/\s*m/.test(text) ||
+    /m\s*=\s*f\s*\/\s*a/.test(text) ||
+    /\d+(\.\d+)?\s*(×|x|\*|\/|÷)\s*\d+(\.\d+)?/.test(text) ||
+    text.includes("=")
+  );
+}
+
 function normalizeAIGradingResult(aiResult, pendingAnswer) {
   const question = findQuestionById(pendingAnswer.questionId);
   const marksAvailable = pendingAnswer.marksAvailable || question?.marks || 1;
@@ -823,6 +908,31 @@ function normalizeAIGradingResult(aiResult, pendingAnswer) {
   marksAwarded = Math.round(marksAwarded);
   marksAwarded = Math.max(0, Math.min(marksAwarded, marksAvailable));
 
+  const markBreakdown = normalizeMarkBreakdown(aiResult?.markBreakdown, question);
+
+  let feedback =
+    typeof aiResult?.feedback === "string" && aiResult.feedback.trim()
+      ? aiResult.feedback.trim()
+      : "AI checked this answer, but no feedback was returned.";
+
+  if (
+    question?.questionType === "calculation" &&
+    marksAvailable >= 2 &&
+    marksAwarded > 1 &&
+    !answerShowsCalculationWorking(pendingAnswer.userAnswer)
+  ) {
+    marksAwarded = 1;
+    feedback = "Correct final answer, but no working was shown.";
+
+    if (markBreakdown.length > 0) {
+      markBreakdown[0] = {
+        ...markBreakdown[0],
+        awarded: false,
+        reason: "No formula, substitution, rearrangement, or calculation method was shown."
+      };
+    }
+  }
+
   const status = getFinalStatus(false, marksAwarded, marksAvailable);
   const percentage = marksAvailable > 0
     ? Math.round((marksAwarded / marksAvailable) * 100)
@@ -830,7 +940,7 @@ function normalizeAIGradingResult(aiResult, pendingAnswer) {
 
   return {
     questionId: pendingAnswer.questionId,
-    questionType: pendingAnswer.questionType,
+    questionType: question?.questionType || pendingAnswer.questionType,
     userAnswer: pendingAnswer.userAnswer,
     isSkipped: false,
     prompt: pendingAnswer.prompt || question?.prompt || "",
@@ -840,14 +950,10 @@ function normalizeAIGradingResult(aiResult, pendingAnswer) {
     marksAwarded,
     marksAvailable,
     percentage,
-    feedback:
-      typeof aiResult?.feedback === "string" && aiResult.feedback.trim()
-        ? aiResult.feedback.trim()
-        : "AI checked this answer, but no feedback was returned.",
-    markBreakdown: normalizeMarkBreakdown(aiResult?.markBreakdown, question)
+    feedback,
+    markBreakdown
   };
 }
-
 // -----------------------------------------------------------------------------------------
 function createAttemptSummary(results) {
   const totalMarksAwarded = results.reduce((total, result) => {
