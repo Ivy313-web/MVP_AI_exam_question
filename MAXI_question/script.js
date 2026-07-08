@@ -7,7 +7,11 @@ const CONFIG = {
   topicBranchExpanded: false,
   homePagePath: "../MAXI_home/home.html",
   sharedTopicsPath: "../shared/topics.json",
-  mockBackendURL: "http://localhost:3000"
+   mockBackendURL:
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1"
+      ? "http://localhost:3000"
+      : "https://maxi-backend-vnkw.onrender.com"
 };
 
 const STATES = {
