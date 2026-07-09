@@ -1,0 +1,307 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family:
+    Inter,
+    Arial,
+    sans-serif;
+  color: #14224a;
+  background: #f4f7fc;
+}
+
+button,
+a {
+  font: inherit;
+}
+
+.guide-page {
+  width: min(1680px, calc(100% - 32px));
+  margin: 0 auto;
+  padding: 18px 0 28px;
+}
+
+.guide-header {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+
+  margin-bottom: 12px;
+  min-height: 72px;
+}
+
+.guide-heading {
+  text-align: center;
+}
+
+.guide-header > div {
+  text-align: center;
+}
+
+.guide-header h1 {
+  margin: 0;
+  font-size: clamp(28px, 3vw, 38px);
+  line-height: 1.1;
+}
+
+.exit-link,
+.exit-link:visited {
+  position: absolute;
+  left: 0;
+  top: 12px;
+
+  display: inline-flex;
+  align-items: center;
+
+  padding: 8px 14px;
+
+  color: #c62828;
+  background: rgba(198, 40, 40, 0.08);
+  border: 1px solid rgba(198, 40, 40, 0.25);
+  border-radius: 10px;
+
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1;
+  text-decoration: none;
+
+  transition:
+    color 0.18s ease,
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.12s ease;
+}
+
+.exit-link:hover {
+  color: #ffffff;
+  background: #c62828;
+  border-color: #c62828;
+  text-decoration: none;
+}
+
+.exit-link:active {
+  transform: translateY(1px) scale(0.98);
+  background: #9f1f1f;
+  border-color: #9f1f1f;
+}
+
+.exit-link:focus {
+  outline: none;
+}
+
+.exit-link:focus-visible {
+  outline: 3px solid rgba(198, 40, 40, 0.35);
+  outline-offset: 3px;
+}
+
+.exit-link:focus-visible {
+  outline: 2px solid #c62828;
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+.guide-progress {
+  margin: 6px 0 0;
+  color: #60709d;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.guide-card {
+  overflow: hidden;
+  border: 1px solid #dce3f2;
+  border-radius: 20px;
+  background: #e9eef8;
+  box-shadow: 0 14px 40px rgba(35, 54, 105, 0.12);
+}
+
+.guide-image-container {
+  position: relative;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  width: 100%;
+  min-height: 420px;
+  padding: 10px 10px 86px;
+
+  background: #e9eef8;
+  overflow: hidden;
+
+  margin: 0;
+  border-radius: inherit;
+}
+
+.guide-image {
+  display: block;
+
+  width: auto;
+  height: auto;
+
+  max-width: 100%;
+  max-height: calc(100vh - 190px);
+
+  object-fit: contain;
+
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(20, 34, 74, 0.16);
+}
+
+.guide-actions {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  bottom: 16px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  width: auto;
+  margin: 0;
+  padding: 0;
+}
+
+.primary-button,
+.secondary-button {
+  min-width: 130px;
+  padding: 13px 24px;
+  border-radius: 12px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.primary-button {
+  border: 1px solid #24469d;
+  color: #ffffff;
+  background: #24469d;
+}
+
+.secondary-button {
+  border: 1px solid #ccd5e8;
+  color: #273965;
+  background: #ffffff;
+}
+
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+@media (max-width: 1100px) {
+  .guide-page {
+    width: calc(100% - 20px);
+    padding-top: 12px;
+  }
+
+  .guide-image-container {
+    min-height: 320px;
+    padding: 8px 8px 76px;
+  }
+
+  .guide-image {
+    max-height: calc(100vh - 180px);
+  }
+
+  .guide-actions {
+    width: min(560px, calc(100% - 30px));
+  }
+}
+
+@media (max-width: 700px) {
+  .guide-page {
+    width: calc(100% - 12px);
+    padding: 8px 0 14px;
+  }
+
+  .guide-header {
+    grid-template-columns: 1fr auto;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .guide-header > div {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .guide-header h1 {
+    font-size: 24px;
+  }
+
+  .exit-link {
+    left: 2px;
+    top: 8px;
+    padding: 7px 10px;
+    font-size: 14px;
+    border-radius: 8px;
+  }
+
+  .guide-progress {
+    grid-column: 2;
+    grid-row: 2;
+    font-size: 14px;
+  }
+
+  .guide-card {
+    border-radius: 14px;
+  }
+
+  .guide-image-container {
+    min-height: 220px;
+    padding: 4px 4px 68px;
+  }
+
+  .guide-image {
+    max-width: 100%;
+    max-height: calc(100vh - 150px);
+
+    border-radius: 6px;
+  }
+
+  .guide-actions {
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    width: auto;
+    padding: 0;
+  }
+
+  .primary-button,
+  .secondary-button {
+    min-width: 140px;
+    padding: 11px 22px;
+
+    border-radius: 10px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+}
+
+@media (max-height: 600px) and (orientation: landscape) {
+  .guide-page {
+    padding-top: 6px;
+  }
+
+  .guide-header {
+    margin-bottom: 6px;
+  }
+
+  .guide-header > div {
+    display: none;
+  }
+
+  .guide-image {
+    max-height: calc(100vh - 90px);
+  }
+
+  .guide-actions {
+    padding: 6px 0 8px;
+  }
+}
+

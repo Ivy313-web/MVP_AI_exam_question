@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>MAXI User Guide</title>
+
+  <link rel="stylesheet" href="guide.css">
+</head>
+
+<body>
+  <main class="guide-page">
+
+    <header class="guide-header">
+      <a
+        class="exit-link"
+        href="../MAXI_home/home.html"
+      >
+        Exit guide
+      </a>
+
+      <div class="guide-heading">
+        <h1>User Guide</h1>
+
+        <p id="guideProgress" class="guide-progress">
+          Step 1 of 23
+        </p>
+      </div>
+    </header>
+
+    <section class="guide-card">
+
+      <div class="guide-image-container">
+        <img
+          id="guideImage"
+          class="guide-image"
+          src=""
+          alt=""
+        >
+        <div class="guide-actions">
+        <button
+          id="backButton"
+          class="secondary-button"
+          type="button"
+        >
+          Back
+        </button>
+
+        <button
+          id="nextButton"
+          class="primary-button"
+          type="button"
+        >
+          Next
+        </button>
+      </div>
+      </div>
+
+      <div class="guide-content">
+        <p id="guideSection" class="guide-section"></p>
+
+        <h2 id="guideTitle"></h2>
+
+        <p id="guideDescription"></p>
+      </div>
+    </section>
+
+  </main>
+
+  <script src="guide.js"></script>
+</body>
+</html>
